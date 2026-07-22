@@ -3,6 +3,7 @@ import '../../core/audio/audio_manager.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/glass_panel.dart';
+import '../../widgets/responsive_content.dart';
 import '../webview/policy_webview_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -44,26 +45,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView(
+                  // ResponsiveContent keeps this list from stretching edge-to-edge
+                  // on iPad's much wider landscape canvas.
+                  child: ResponsiveContent(child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     children: [
                       GlassPanel(
-                        child: Column(
-                          children: [
-                            _ToggleRow(
-                              label: 'Sound Effects',
-                              icon: Icons.volume_up_rounded,
-                              value: _audio.sfxEnabled,
-                              onChanged: (v) => setState(() => _audio.setSfxEnabled(v)),
-                            ),
-                            const Divider(color: Colors.white24, height: 24),
-                            _ToggleRow(
-                              label: 'Music',
-                              icon: Icons.music_note_rounded,
-                              value: _audio.musicEnabled,
-                              onChanged: (v) => setState(() => _audio.setMusicEnabled(v)),
-                            ),
-                          ],
+                        child: _ToggleRow(
+                          label: 'Sound Effects',
+                          icon: Icons.volume_up_rounded,
+                          value: _audio.sfxEnabled,
+                          onChanged: (v) => setState(() => _audio.setSfxEnabled(v)),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -100,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ],
-                  ),
+                  )),
                 ),
               ],
             ),

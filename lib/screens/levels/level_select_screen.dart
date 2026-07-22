@@ -5,6 +5,7 @@ import '../../core/models/level_config.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/glass_panel.dart';
+import '../../widgets/responsive_content.dart';
 import '../game/game_screen.dart';
 
 class LevelSelectScreen extends StatelessWidget {
@@ -13,11 +14,11 @@ class LevelSelectScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = GameStateScope.of(context);
-    // Every level is playable from the start - the star rating on each tile
-    // still tracks how well the player has cleared it, but nothing is gated
-    // behind beating the previous level.
-    final unlocked = LevelCatalog.totalLevels;
+    // Levels unlock one at a time: clearing a level raises highestLevelUnlocked
+    // by one, which is the only thing that opens the next tile.
+    final unlocked = state.highestLevelUnlocked;
     final stars = state.starsPerLevel;
+    final endlessUnlocked = unlocked > LevelCatalog.totalLevels;
 
     final byKitchen = <KitchenTheme, List<int>>{};
     for (var lvl = 1; lvl <= LevelCatalog.totalLevels; lvl++) {
@@ -36,7 +37,10 @@ class LevelSelectScreen extends StatelessWidget {
               children: [
                 _Header(title: 'Select Level'),
                 Expanded(
-                  child: ListView(
+                  // ResponsiveContent keeps this list from stretching edge-to-edge
+                  // on iPad's much wider landscape canvas (a bit roomier than the
+                  // other menu screens since each entry is a grid of level tiles).
+                  child: ResponsiveContent(maxWidth: 900, child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     children: [
                       for (final entry in byKitchen.entries)
@@ -46,8 +50,9 @@ class LevelSelectScreen extends StatelessWidget {
                           highestUnlocked: unlocked,
                           stars: stars,
                         ),
+                      _EndlessSection(unlocked: endlessUnlocked, bestScore: state.bestEndlessScore),
                     ],
-                  ),
+                  )),
                 ),
               ],
             ),
@@ -198,6 +203,75 @@ class _LevelTile extends StatelessWidget {
                   ),
                 ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Unlocks once every kitchen level has been cleared - a score-attack run on
+/// the hardest kitchen's difficulty that just keeps going until 3 mistakes
+/// end it, instead of a fixed level with a target order count.
+class _EndlessSection extends StatelessWidget {
+  const _EndlessSection({required this.unlocked, required this.bestScore});
+
+  final bool unlocked;
+  final int bestScore;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: unlocked
+            ? () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const GameScreen.endless()),
+                )
+            : null,
+        child: Opacity(
+          opacity: unlocked ? 1 : 0.6,
+          child: GlassPanel(
+            borderRadius: 22,
+            child: Row(
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    gradient: unlocked ? AppColors.primaryButtonGradient : null,
+                    color: unlocked ? null : AppColors.surfaceDarkAlt,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.accent.withValues(alpha: 0.6), width: 1.4),
+                  ),
+                  child: Icon(
+                    unlocked ? Icons.all_inclusive_rounded : Icons.lock,
+                    color: unlocked ? Colors.white : Colors.white70,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Endless Mode', style: AppTextStyles.h3.copyWith(color: AppColors.textOnDark)),
+                      const SizedBox(height: 2),
+                      Text(
+                        unlocked
+                            ? 'Best score: $bestScore  \u00b7  3 mistakes and it\'s over'
+                            : 'Clear every level to unlock',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textOnDark.withValues(alpha: 0.75),
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (unlocked) const Icon(Icons.chevron_right, color: AppColors.accent),
+              ],
+            ),
           ),
         ),
       ),

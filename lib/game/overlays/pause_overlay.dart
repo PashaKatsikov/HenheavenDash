@@ -10,18 +10,14 @@ class PauseOverlay extends StatelessWidget {
     required this.onRestart,
     required this.onExit,
     required this.sfxEnabled,
-    required this.musicEnabled,
     required this.onToggleSfx,
-    required this.onToggleMusic,
   });
 
   final VoidCallback onResume;
   final VoidCallback onRestart;
   final VoidCallback onExit;
   final bool sfxEnabled;
-  final bool musicEnabled;
   final ValueChanged<bool> onToggleSfx;
-  final ValueChanged<bool> onToggleMusic;
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +36,6 @@ class PauseOverlay extends StatelessWidget {
                 children: [
                   Switch(value: sfxEnabled, onChanged: onToggleSfx),
                   const Text('SFX', style: TextStyle(color: Colors.white)),
-                  const SizedBox(width: 16),
-                  Switch(value: musicEnabled, onChanged: onToggleMusic),
-                  const Text('Music', style: TextStyle(color: Colors.white)),
                 ],
               ),
               const SizedBox(height: 20),

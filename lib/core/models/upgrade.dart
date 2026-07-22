@@ -37,15 +37,6 @@ class UpgradeCatalog {
       costGrowth: 0.35,
     ),
     UpgradeDef(
-      id: 'service_speed',
-      name: 'Chef Speed',
-      description: 'Your chef moves and plates food faster.',
-      iconPath: '${_kitchenBase}kit_spatula_wood.png',
-      maxLevel: 8,
-      baseCost: 60,
-      costGrowth: 0.35,
-    ),
-    UpgradeDef(
       id: 'extra_station',
       name: 'Extra Station',
       description: 'Unlocks another cooking station so more dishes can cook at once.',
@@ -53,15 +44,6 @@ class UpgradeCatalog {
       maxLevel: 3,
       baseCost: 250,
       costGrowth: 0.9,
-    ),
-    UpgradeDef(
-      id: 'ingredient_capacity',
-      name: 'Pantry Capacity',
-      description: 'Stations hold more prepped ingredients before refilling.',
-      iconPath: '${_kitchenBase}kit_basket_eggs_brown.png',
-      maxLevel: 6,
-      baseCost: 80,
-      costGrowth: 0.4,
     ),
     UpgradeDef(
       id: 'tip_boost',

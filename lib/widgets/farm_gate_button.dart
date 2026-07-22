@@ -24,8 +24,7 @@ class _FarmGateButtonState extends State<FarmGateButton> {
 
   @override
   Widget build(BuildContext context) {
-    final playIconSize = (widget.height * 0.42).clamp(18.0, 30.0);
-    final fontSize = (widget.height * 0.38).clamp(15.0, 27.0);
+    final fontSize = (widget.height * 0.38).clamp(15.0, 32.0);
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -81,16 +80,20 @@ class _FarmGateButtonState extends State<FarmGateButton> {
                           ),
                         ),
                         Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.play_arrow_rounded, color: AppColors.accent, size: playIconSize),
-                              const SizedBox(width: 4),
-                              Text(
-                                'PLAY',
-                                style: AppTextStyles.button.copyWith(fontSize: fontSize, color: AppColors.accent, letterSpacing: 1.5),
-                              ),
-                            ],
+                          // FittedBox(scaleDown) is a safety net, not the primary
+                          // sizing mechanism: playIconSize/fontSize above already
+                          // pick a sensible size for the given button dimensions,
+                          // but this guarantees the icon+"PLAY" row can never
+                          // overflow (and get silently clipped by the ClipRRect
+                          // above) no matter how compact a width/height this
+                          // button is ever placed at - e.g. sitting inside the
+                          // bottom shortcut row alongside the smaller menu tiles.
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'PLAY',
+                              style: AppTextStyles.button.copyWith(fontSize: fontSize, color: AppColors.accent, letterSpacing: 1.5),
+                            ),
                           ),
                         ),
                       ],

@@ -7,6 +7,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/currency_chip.dart';
 import '../../widgets/game_button.dart';
 import '../../widgets/glass_panel.dart';
+import '../../widgets/responsive_content.dart';
 
 class UpgradeShopScreen extends StatefulWidget {
   const UpgradeShopScreen({super.key});
@@ -49,7 +50,9 @@ class _UpgradeShopScreenState extends State<UpgradeShopScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
+                  // ResponsiveContent keeps this list from stretching edge-to-edge
+                  // on iPad's much wider landscape canvas.
+                  child: ResponsiveContent(child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                     itemCount: UpgradeCatalog.all.length,
                     itemBuilder: (context, index) {
@@ -116,7 +119,7 @@ class _UpgradeShopScreenState extends State<UpgradeShopScreen> {
                         ),
                       );
                     },
-                  ),
+                  )),
                 ),
               ],
             ),

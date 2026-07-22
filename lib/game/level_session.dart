@@ -69,24 +69,35 @@ class LevelSession extends ChangeNotifier {
     required this.config,
     required int stationCount,
     required this.cookSpeedMultiplier,
-    required this.serviceSpeedMultiplier,
     required this.patienceBonusSeconds,
     required this.tipMultiplierUpgrade,
     required List<Recipe> availableRecipes,
+    this.endless = false,
   })  : availableRecipes = availableRecipes.isNotEmpty ? availableRecipes : [RecipeCatalog.all.first],
         stations = List.generate(stationCount, (i) => Station(id: i)),
         _rng = Random() {
-    _scheduleNextSpawn();
+    // The very first guest is already waiting the instant the level starts -
+    // 0 means the first _updateSpawning tick spawns them immediately, so the
+    // player isn't idly watching an empty counter burn precious level time
+    // before anyone even walks in. Every subsequent spawn uses the normal
+    // randomised interval.
+    _timeUntilSpawn = 0;
   }
 
   final LevelConfig config;
   final double cookSpeedMultiplier; // <1 = faster cooking
-  final double serviceSpeedMultiplier; // <1 = faster manual actions (not heavily used yet)
   final double patienceBonusSeconds;
   final double tipMultiplierUpgrade;
   final List<Recipe> availableRecipes;
   final List<Station> stations;
   final Random _rng;
+
+  /// Endless mode: no time limit and no target order count - the run just
+  /// keeps going (with the hardest level's difficulty) until [mistakes]
+  /// reaches [_maxMistakes], purely for a high score instead of a pass/fail.
+  final bool endless;
+  static const int _maxMistakes = 3;
+  int mistakes = 0;
 
   final List<ActiveCustomer> queue = [];
   final List<SessionEvent> _pendingEvents = [];
@@ -114,7 +125,9 @@ class LevelSession extends ChangeNotifier {
   ChefPose get chefPose => _pose;
 
   double get timeRemaining => _timeRemaining;
+  double get elapsedSeconds => _elapsed;
   double get levelProgress => (ordersServed / config.targetOrders).clamp(0, 1);
+  int get mistakesRemaining => (_maxMistakes - mistakes).clamp(0, _maxMistakes);
 
   void _scheduleNextSpawn() {
     _timeUntilSpawn = config.spawnIntervalSeconds * (0.75 + _rng.nextDouble() * 0.5);
@@ -148,7 +161,11 @@ class LevelSession extends ChangeNotifier {
     _updateCooking(dt);
     _updateChefPose();
 
-    if (_timeRemaining <= 0 && ordersServed < config.targetOrders) {
+    if (endless) {
+      // No clock, no order target - the run only ends once too many
+      // mistakes (wrong ingredients / customers lost) pile up.
+      if (mistakes >= _maxMistakes) _finish(won: false);
+    } else if (_timeRemaining <= 0 && ordersServed < config.targetOrders) {
       _finish(won: false);
     } else if (ordersServed >= config.targetOrders) {
       _finish(won: true);
@@ -203,6 +220,7 @@ class LevelSession extends ChangeNotifier {
     }
     missedCustomers++;
     combo = 0;
+    if (endless) mistakes++;
     _emit(const SessionEvent(SessionEventType.customerLeftAngry));
   }
 
@@ -271,6 +289,10 @@ class LevelSession extends ChangeNotifier {
     if (station.state != StationState.prepping || station.customer == null) return;
     final required = station.customer!.recipe.ingredientIds.toSet();
     if (!required.contains(ingredientId) || station.preparedIngredients.contains(ingredientId)) {
+      // Only a genuinely *wrong* (decoy) tap counts as a mistake in endless
+      // mode - re-tapping an ingredient already prepared is harmless noise,
+      // not a mistake, so it shouldn't cost a life.
+      if (endless && !station.preparedIngredients.contains(ingredientId)) mistakes++;
       _emit(SessionEvent(SessionEventType.ingredientWrong, stationId: stationId));
       notifyListeners();
       return;

@@ -17,12 +17,17 @@ class CurrencyChip extends StatefulWidget {
     required this.value,
     this.compact = false,
     this.prefix = '',
+    this.scale = 1.0,
   });
 
   final String iconPath;
   final int value;
   final bool compact;
   final String prefix;
+
+  /// UI scale multiplier - bumped above 1 on tablets so the readout isn't a
+  /// tiny speck on a large iPad canvas.
+  final double scale;
 
   @override
   State<CurrencyChip> createState() => _CurrencyChipState();
@@ -31,12 +36,12 @@ class CurrencyChip extends StatefulWidget {
 class _CurrencyChipState extends State<CurrencyChip> {
   @override
   Widget build(BuildContext context) {
-    final size = widget.compact ? 28.0 : 38.0;
+    final size = (widget.compact ? 28.0 : 38.0) * widget.scale;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Image.asset(widget.iconPath, width: size, height: size),
-        const SizedBox(width: 4),
+        SizedBox(width: 4 * widget.scale),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 260),
           transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
@@ -44,7 +49,7 @@ class _CurrencyChipState extends State<CurrencyChip> {
             '${widget.prefix}${widget.value}',
             key: ValueKey(widget.value),
             style: AppTextStyles.hudNumber.copyWith(
-              fontSize: widget.compact ? 16 : 21,
+              fontSize: (widget.compact ? 16 : 21) * widget.scale,
               shadows: _numberShadow,
             ),
           ),

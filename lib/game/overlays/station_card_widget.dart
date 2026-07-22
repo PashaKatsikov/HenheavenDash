@@ -12,13 +12,23 @@ class StationCardWidget extends StatefulWidget {
     required this.station,
     required this.onTapIngredient,
     required this.onServe,
+    this.width = defaultWidth,
+    this.height = defaultHeight,
   });
 
   final Station station;
   final void Function(String ingredientId) onTapIngredient;
   final VoidCallback onServe;
 
-  static const double size = 196;
+  /// Outer card dimensions. The counter area is far wider than it is tall in
+  /// landscape, so the card is a wide rectangle - the caller stretches the
+  /// width to use that spare horizontal room while capping the height to the
+  /// space actually available, giving the ingredients a big, readable canvas
+  /// instead of a cramped square that had to shrink everything to fit.
+  final double width;
+  final double height;
+  static const double defaultWidth = 300;
+  static const double defaultHeight = 176;
 
   @override
   State<StationCardWidget> createState() => _StationCardWidgetState();
@@ -46,8 +56,8 @@ class _StationCardWidgetState extends State<StationCardWidget> {
       borderRadius: 18,
       borderColor: station.state == StationState.ready ? AppColors.success : null,
       child: SizedBox(
-        width: StationCardWidget.size - 20,
-        height: StationCardWidget.size - 20,
+        width: widget.width - 20,
+        height: widget.height - 20,
         child: _buildContent(station),
       ),
     );
@@ -80,44 +90,72 @@ class _StationCardWidgetState extends State<StationCardWidget> {
         );
       case StationState.prepping:
         final customer = station.customer!;
-        return Column(
+        // Landscape layout: the dish being prepared sits in a slim column on
+        // the left, and the ingredient buttons - the thing the player is
+        // actually tapping - get the whole rest of the (wide) card on the
+        // right, so they can be big and easy to read instead of squeezed
+        // into a tiny square grid.
+        return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Image.asset(customer.recipe.foodIconPath, width: 32, height: 32),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
+            SizedBox(
+              width: (widget.width * 0.26).clamp(52.0, 92.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(customer.recipe.foodIconPath, width: 44, height: 44),
+                  const SizedBox(height: 4),
+                  Text(
                     customer.recipe.name,
+                    textAlign: TextAlign.center,
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.textOnDark,
                       fontWeight: FontWeight.w700,
-                      fontSize: 12,
+                      fontSize: 11,
+                      height: 1.05,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
+            Container(
+              width: 1.5,
+              margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+              color: AppColors.accent.withValues(alpha: 0.25),
+            ),
             Expanded(
-              child: Center(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    for (final id in station.shelfIngredientIds)
-                      _IngredientChip(
-                        ingredient: IngredientCatalog.byId(id),
-                        prepared: station.preparedIngredients.contains(id),
-                        shaking: _shakeIngredient == id,
-                        onTap: () => _handleTap(id),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // The ingredient grid wraps at its natural (now bigger) chip
+                  // size across the wide right-hand area, then the whole block
+                  // is scaled down only if needed to fit the height - so on
+                  // the roomy wide card it renders at full, readable size and
+                  // never gets its top row clipped, however many ingredients
+                  // or decoys a recipe has.
+                  return FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        children: [
+                          for (final id in station.shelfIngredientIds)
+                            _IngredientChip(
+                              ingredient: IngredientCatalog.byId(id),
+                              prepared: station.preparedIngredients.contains(id),
+                              shaking: _shakeIngredient == id,
+                              onTap: () => _handleTap(id),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -178,7 +216,7 @@ class _IngredientChip extends StatelessWidget {
   final bool shaking;
   final VoidCallback onTap;
 
-  static const double _width = 48;
+  static const double _width = 66;
 
   @override
   Widget build(BuildContext context) {
@@ -190,10 +228,10 @@ class _IngredientChip extends StatelessWidget {
         width: _width,
         decoration: BoxDecoration(
           color: prepared ? AppColors.success.withValues(alpha: 0.35) : Colors.white.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(11),
+          borderRadius: BorderRadius.circular(13),
           border: Border.all(
             color: shaking ? AppColors.cta : (prepared ? AppColors.success : AppColors.accent.withValues(alpha: 0.85)),
-            width: 1.8,
+            width: 2,
           ),
           boxShadow: prepared
               ? const []
@@ -205,13 +243,13 @@ class _IngredientChip extends StatelessWidget {
                   ),
                 ],
         ),
-        padding: const EdgeInsets.symmetric(vertical: 3),
+        padding: const EdgeInsets.symmetric(vertical: 5),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 28,
-              height: 28,
+              width: 42,
+              height: 42,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -223,18 +261,18 @@ class _IngredientChip extends StatelessWidget {
                     ),
                   ),
                   if (prepared)
-                    const Icon(Icons.check_circle, size: 16, color: AppColors.success),
+                    const Icon(Icons.check_circle, size: 22, color: AppColors.success),
                 ],
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               ingredient.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: AppTextStyles.caption.copyWith(
-                fontSize: 8.5,
+                fontSize: 10,
                 height: 1.1,
                 color: prepared ? Colors.white38 : AppColors.textOnDark,
               ),

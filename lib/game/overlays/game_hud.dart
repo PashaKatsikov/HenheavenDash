@@ -7,16 +7,23 @@ import '../../widgets/glass_panel.dart';
 import '../level_session.dart';
 
 class GameHud extends StatelessWidget {
-  const GameHud({super.key, required this.session, required this.onPause});
+  const GameHud({super.key, required this.session, required this.onPause, this.endless = false});
 
   final LevelSession session;
   final VoidCallback onPause;
 
+  /// Endless mode has no clock or order target - the middle panel shows a
+  /// mistake counter instead of order progress, and the clock counts up
+  /// (how long the run has lasted) rather than down.
+  final bool endless;
+
   @override
   Widget build(BuildContext context) {
-    final minutes = (session.timeRemaining.clamp(0, double.infinity) / 60).floor();
-    final seconds = (session.timeRemaining.clamp(0, double.infinity) % 60).floor();
+    final displaySeconds = endless ? session.elapsedSeconds : session.timeRemaining;
+    final minutes = (displaySeconds.clamp(0, double.infinity) / 60).floor();
+    final seconds = (displaySeconds.clamp(0, double.infinity) % 60).floor();
     final timeLabel = '${minutes.toString().padLeft(1, '0')}:${seconds.toString().padLeft(2, '0')}';
+    final timeUrgent = !endless && session.timeRemaining < 15;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,20 +47,39 @@ class GameHud extends StatelessWidget {
             borderRadius: 20,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text('Orders', style: AppTextStyles.caption.copyWith(color: Colors.white70)),
-                    const Spacer(),
-                    Text(
-                      '${session.ordersServed}/${session.config.targetOrders}',
-                      style: AppTextStyles.caption.copyWith(color: AppColors.textOnDark),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                GameProgressBar(value: session.levelProgress, height: 8),
-              ],
+              children: endless
+                  ? [
+                      Row(
+                        children: [
+                          Text('Mistakes', style: AppTextStyles.caption.copyWith(color: Colors.white70)),
+                          const Spacer(),
+                          Text(
+                            '${session.mistakes}/3',
+                            style: AppTextStyles.caption.copyWith(color: AppColors.textOnDark),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      GameProgressBar(
+                        value: session.mistakes / 3,
+                        height: 8,
+                        gradient: const LinearGradient(colors: [AppColors.cta, AppColors.cta]),
+                      ),
+                    ]
+                  : [
+                      Row(
+                        children: [
+                          Text('Orders', style: AppTextStyles.caption.copyWith(color: Colors.white70)),
+                          const Spacer(),
+                          Text(
+                            '${session.ordersServed}/${session.config.targetOrders}',
+                            style: AppTextStyles.caption.copyWith(color: AppColors.textOnDark),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      GameProgressBar(value: session.levelProgress, height: 8),
+                    ],
             ),
           ),
         ),
@@ -61,14 +87,12 @@ class GameHud extends StatelessWidget {
         GlassPanel(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           borderRadius: 20,
-          borderColor: session.timeRemaining < 15 ? AppColors.cta : null,
+          borderColor: timeUrgent ? AppColors.cta : null,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                session.timeRemaining < 15
-                    ? 'assets/images/kitchen/kit_timer_red.png'
-                    : 'assets/images/kitchen/kit_timer_blue.png',
+                timeUrgent ? 'assets/images/kitchen/kit_timer_red.png' : 'assets/images/kitchen/kit_timer_blue.png',
                 width: 20,
                 height: 20,
               ),

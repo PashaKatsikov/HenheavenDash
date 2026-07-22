@@ -12,12 +12,22 @@ import '../level_session.dart';
 /// the room rather than a stack of UI cards. Tapping any customer sends
 /// their order to a free cooking station.
 class CustomerQueueWidget extends StatelessWidget {
-  const CustomerQueueWidget({super.key, required this.session, required this.onTapCustomer});
+  const CustomerQueueWidget({
+    super.key,
+    required this.session,
+    required this.onTapCustomer,
+    this.height = 190,
+  });
 
   final LevelSession session;
   final void Function(ActiveCustomer) onTapCustomer;
 
-  static const double rowHeight = 160;
+  /// The vertical room this strip has been given. Every element inside a
+  /// customer (order icon, portrait, name, patience bar) is sized as a
+  /// fraction of this, so guests scale up to read big on a tall iPad canvas
+  /// and gracefully shrink on a short phone-in-landscape one - instead of a
+  /// fixed pixel size that looked tiny ("like smurfs") in a tall slot.
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +35,7 @@ class CustomerQueueWidget extends StatelessWidget {
     final queue = session.queue;
 
     return SizedBox(
-      height: rowHeight,
+      height: height,
       child: queue.isEmpty
           ? const Align(alignment: Alignment.centerLeft, child: _EmptyCounter())
           : ListView.separated(
@@ -41,6 +51,7 @@ class CustomerQueueWidget extends StatelessWidget {
                   child: _CounterCustomerCard(
                     customer: customer,
                     featured: featured,
+                    slotHeight: height,
                     tappable: !assigned && hasFreeStation,
                     onTap: () => onTapCustomer(customer),
                   ),
@@ -107,12 +118,14 @@ class _CounterCustomerCard extends StatelessWidget {
   const _CounterCustomerCard({
     required this.customer,
     required this.featured,
+    required this.slotHeight,
     required this.tappable,
     required this.onTap,
   });
 
   final ActiveCustomer customer;
   final bool featured;
+  final double slotHeight;
   final bool tappable;
   final VoidCallback onTap;
 
@@ -120,80 +133,105 @@ class _CounterCustomerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final assigned = customer.assignedStationId != null;
     final patienceColor = _patienceColor(customer.patienceFraction);
-    final portraitSize = featured ? 58.0 : 50.0;
-    final iconSize = featured ? 34.0 : 28.0;
+
+    // Everything is a fraction of the slot height. The front-of-line guest
+    // ([featured]) gets a modest bump so it's clear who's served next. The
+    // portrait deliberately claims the biggest share so the character - not
+    // the order ticket - is the dominant, easily-readable element.
+    final scale = featured ? 1.12 : 1.0;
+    final portraitSize = slotHeight * 0.52 * scale;
+    final iconSize = slotHeight * 0.24 * scale;
+    final nameFont = (slotHeight * 0.072 * scale).clamp(11.0, 22.0);
+    final barHeight = (slotHeight * 0.035).clamp(5.0, 10.0);
+    final cardWidth = portraitSize + slotHeight * 0.22;
 
     return GestureDetector(
       onTap: tappable ? onTap : null,
       child: Opacity(
         opacity: assigned ? 0.62 : 1,
         child: SizedBox(
-          width: featured ? 96.0 : 82.0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Order: bare food icon + name, no ticket/bubble shape behind it.
-              Image.asset(
-                customer.recipe.foodIconPath,
-                width: iconSize,
-                height: iconSize,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                customer.recipe.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: AppTextStyles.heading,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  height: 1.1,
-                  color: AppColors.textOnDark,
-                  shadows: _labelShadow,
-                ),
-              ),
-              const SizedBox(height: 6),
-              // Soft ground shadow beneath the character instead of a
-              // colored plate/backdrop - keeps depth without a box.
-              SizedBox(
-                height: portraitSize + 8,
-                child: Stack(
-                  alignment: Alignment.bottomCenter,
-                  children: [
-                    Positioned(
-                      bottom: 2,
-                      child: Container(
-                        width: portraitSize * 0.62,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.black.withValues(alpha: 0.28),
+          width: cardWidth,
+          // A scaleDown safety net so a very small slot (a short phone in
+          // landscape) can never force the stacked column to overflow its
+          // row - it stays pixel-proportional and simply shrinks to fit.
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: SizedBox(
+              width: cardWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Order: bare food icon + name, no ticket/bubble shape behind it.
+                  Image.asset(
+                    customer.recipe.foodIconPath,
+                    width: iconSize,
+                    height: iconSize,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    customer.recipe.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.heading,
+                      fontWeight: FontWeight.w700,
+                      fontSize: nameFont,
+                      height: 1.1,
+                      color: AppColors.textOnDark,
+                      shadows: _labelShadow,
+                    ),
+                  ),
+                  SizedBox(height: slotHeight * 0.03),
+                  // Soft ground shadow beneath the character instead of a
+                  // colored plate/backdrop - keeps depth without a box.
+                  SizedBox(
+                    height: portraitSize + 8,
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Positioned(
+                          bottom: 2,
+                          child: Container(
+                            width: portraitSize * 0.62,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withValues(alpha: 0.28),
+                            ),
+                          ),
                         ),
+                        Image.asset(customer.type.portraitPath, height: portraitSize, fit: BoxFit.contain),
+                        if (assigned)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Image.asset(
+                              'assets/images/kitchen/kit_pan_black.png',
+                              width: iconSize * 0.5,
+                              height: iconSize * 0.5,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: slotHeight * 0.028),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: SizedBox(
+                      width: cardWidth,
+                      child: LinearProgressIndicator(
+                        value: customer.patienceFraction,
+                        minHeight: barHeight,
+                        backgroundColor: Colors.black.withValues(alpha: 0.35),
+                        color: patienceColor,
                       ),
                     ),
-                    Image.asset(customer.type.portraitPath, height: portraitSize, fit: BoxFit.contain),
-                    if (assigned)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Image.asset('assets/images/kitchen/kit_pan_black.png', width: 18, height: 18),
-                      ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 5),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: customer.patienceFraction,
-                  minHeight: 5,
-                  backgroundColor: Colors.black.withValues(alpha: 0.35),
-                  color: patienceColor,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

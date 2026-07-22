@@ -6,6 +6,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/game_button.dart';
 import '../../widgets/game_progress_bar.dart';
 import '../../widgets/glass_panel.dart';
+import '../../widgets/responsive_content.dart';
 
 class DailyTasksScreen extends StatefulWidget {
   const DailyTasksScreen({super.key});
@@ -47,7 +48,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
+                  // ResponsiveContent keeps this list from stretching edge-to-edge
+                  // on iPad's much wider landscape canvas.
+                  child: ResponsiveContent(child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                     itemCount: tasks.length,
                     itemBuilder: (context, index) {
@@ -102,7 +105,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                         ),
                       );
                     },
-                  ),
+                  )),
                 ),
               ],
             ),

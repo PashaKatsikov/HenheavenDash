@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/glass_panel.dart';
 
 /// Generic in-app WebView used for Privacy Policy / Support so players never
 /// have to leave the app. Handles back navigation (Android back button pops
@@ -53,6 +54,11 @@ class _PolicyWebViewScreenState extends State<PolicyWebViewScreen> {
     return true;
   }
 
+  Future<void> _close() async {
+    final shouldPop = await _handleBack();
+    if (shouldPop && mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -64,23 +70,6 @@ class _PolicyWebViewScreenState extends State<PolicyWebViewScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          flexibleSpace: const DecoratedBox(
-            decoration: BoxDecoration(gradient: AppColors.appBarGradient),
-          ),
-          title: Text(widget.title, style: AppTextStyles.h3.copyWith(color: Colors.white)),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              tooltip: 'Close',
-              onPressed: () async {
-                final shouldPop = await _handleBack();
-                if (shouldPop && context.mounted) Navigator.of(context).pop();
-              },
-            ),
-          ],
-        ),
         body: Stack(
           children: [
             if (_error)
@@ -112,6 +101,45 @@ class _PolicyWebViewScreenState extends State<PolicyWebViewScreen> {
               const Center(
                 child: CircularProgressIndicator(color: AppColors.primary),
               ),
+            // Drawn as its own Stack layer *above* the WebView (rather than
+            // a Scaffold `appBar`) and styled like every other screen's
+            // top-left circular back button - webview_flutter's native
+            // platform view can otherwise end up capturing taps meant for a
+            // Material AppBar action on some devices/composition modes,
+            // which is exactly what left players unable to back out of this
+            // screen without restarting the app. Being a plain Flutter
+            // GestureDetector painted on top guarantees it's always the
+            // widget that receives the tap.
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: _close,
+                      child: const GlassPanel(
+                        padding: EdgeInsets.all(10),
+                        borderRadius: 30,
+                        child: Icon(Icons.arrow_back, color: AppColors.accent),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: GlassPanel(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        borderRadius: 20,
+                        child: Text(
+                          widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.h3.copyWith(color: AppColors.textOnDark),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

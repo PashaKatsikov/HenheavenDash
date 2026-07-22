@@ -17,6 +17,9 @@ class LevelResultOverlay extends StatelessWidget {
     required this.onRetry,
     required this.onNext,
     required this.onExit,
+    this.endless = false,
+    this.isNewBest = false,
+    this.bestScore = 0,
   });
 
   final bool won;
@@ -29,8 +32,16 @@ class LevelResultOverlay extends StatelessWidget {
   final VoidCallback? onNext;
   final VoidCallback onExit;
 
+  /// Endless mode has no "win" state - a run always ends once 3 mistakes
+  /// pile up, so the overlay swaps stars/next-level for a best-score banner.
+  final bool endless;
+  final bool isNewBest;
+  final int bestScore;
+
   @override
   Widget build(BuildContext context) {
+    final title = endless ? 'Game Over!' : (won ? 'Kitchen Cleared!' : "Time's Up!");
+    final celebratory = !endless && won;
     return Container(
       color: Colors.black.withValues(alpha: 0.6),
       child: Center(
@@ -43,15 +54,18 @@ class LevelResultOverlay extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
-                    won ? 'assets/images/chef/chef_celebrating.png' : 'assets/images/chef/chef_shocked.png',
+                    celebratory ? 'assets/images/chef/chef_celebrating.png' : 'assets/images/chef/chef_shocked.png',
                     height: 110,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    won ? 'Kitchen Cleared!' : "Time's Up!",
-                    style: AppTextStyles.h1.copyWith(fontSize: 30),
-                  ),
-                  if (won) ...[
+                  Text(title, style: AppTextStyles.h1.copyWith(fontSize: 30)),
+                  if (endless && isNewBest) ...[
+                    const SizedBox(height: 10),
+                    Text('🏆 New Best Score!', style: AppTextStyles.h3.copyWith(color: AppColors.accent)),
+                  ] else if (!endless) ...[
+                    // Stars now always reflect the score earned, even on a
+                    // loss, so a near-miss run still shows fair credit
+                    // instead of flattening straight to zero.
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -84,7 +98,8 @@ class LevelResultOverlay extends StatelessWidget {
                   _StatRow(label: 'Score', value: '$score'),
                   _StatRow(label: 'Coins earned', value: '+$coinsEarned'),
                   _StatRow(label: 'Tips earned', value: '+$tipsEarned'),
-                  if (newlyUnlockedRecipes.isNotEmpty) ...[
+                  if (endless) _StatRow(label: 'Best score', value: '$bestScore'),
+                  if (!endless && newlyUnlockedRecipes.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     Text('New recipe unlocked!', style: AppTextStyles.h3.copyWith(color: AppColors.accent)),
                     const SizedBox(height: 8),
@@ -106,19 +121,19 @@ class LevelResultOverlay extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       GameButton(
-                        label: won ? 'Replay' : 'Retry',
+                        label: celebratory ? 'Replay' : 'Retry',
                         style: GameButtonStyle.outline,
                         width: 130,
                         onPressed: onRetry,
                       ),
                       const SizedBox(width: 12),
-                      if (won && onNext != null)
+                      if (!endless && won && onNext != null)
                         GameButton(label: 'Next Level', style: GameButtonStyle.success, width: 150, onPressed: onNext)
                       else
                         GameButton(label: 'Menu', style: GameButtonStyle.success, width: 130, onPressed: onExit),
                     ],
                   ),
-                  if (won && onNext != null) ...[
+                  if (!endless && won && onNext != null) ...[
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: onExit,

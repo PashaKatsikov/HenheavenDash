@@ -32,7 +32,7 @@ class SaveService {
   static const _kDailyTasksState = 'daily_tasks_state';
   static const _kDailyTasksDate = 'daily_tasks_date';
   static const _kStarsPerLevel = 'stars_per_level';
-  static const _kOwnedDecor = 'owned_decor';
+  static const _kBestEndlessScore = 'best_endless_score';
   static const _kDailyRewardStreak = 'daily_reward_streak';
   static const _kDailyRewardLastClaim = 'daily_reward_last_claim';
 
@@ -126,11 +126,10 @@ class SaveService {
     await _prefs.remove(_kDailyTasksState);
   }
 
-  // ---- Decor collection ---------------------------------------------------
-  Set<String> get ownedDecorIds => (_prefs.getStringList(_kOwnedDecor) ?? const []).toSet();
-  Future<void> unlockDecor(String id) async {
-    final set = ownedDecorIds..add(id);
-    await _prefs.setStringList(_kOwnedDecor, set.toList());
+  // ---- Endless mode --------------------------------------------------------
+  int get bestEndlessScore => _prefs.getInt(_kBestEndlessScore) ?? 0;
+  Future<void> reportEndlessScore(int score) async {
+    if (score > bestEndlessScore) await _prefs.setInt(_kBestEndlessScore, score);
   }
 
   // ---- Daily login reward --------------------------------------------------

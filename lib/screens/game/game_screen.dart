@@ -18,9 +18,17 @@ import '../../game/overlays/station_card_widget.dart';
 import '../menu/main_menu_screen.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, required this.level});
+  const GameScreen({super.key, required this.level}) : endless = false;
+
+  /// Score-attack run on the hardest kitchen's difficulty, unlocked once
+  /// every level has been cleared: no target orders or clock, it just ends
+  /// after 3 mistakes.
+  const GameScreen.endless({super.key})
+      : level = 0,
+        endless = true;
 
   final int level;
+  final bool endless;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -37,6 +45,7 @@ class _GameScreenState extends State<GameScreen> {
   bool _sessionReady = false;
   bool _cookingLoopOn = false;
   LevelResult? _levelResult;
+  EndlessResult? _endlessResult;
 
   @override
   void initState() {
@@ -56,23 +65,30 @@ class _GameScreenState extends State<GameScreen> {
 
   void _buildSession() {
     final state = GameStateScope.of(context);
-    final config = LevelCatalog.getLevel(widget.level);
+    // Endless mode always runs on the hardest kitchen's difficulty (the last
+    // level) since there's no single "level number" for it.
+    final config = widget.endless ? LevelCatalog.getLevel(LevelCatalog.totalLevels) : LevelCatalog.getLevel(widget.level);
     final upgrades = state.upgradeLevels;
 
     final cookSpeedLvl = upgrades['cook_speed'] ?? 0;
-    final serviceSpeedLvl = upgrades['service_speed'] ?? 0;
     final extraStationLvl = upgrades['extra_station'] ?? 0;
     final patienceLvl = upgrades['patience_boost'] ?? 0;
     final tipLvl = upgrades['tip_boost'] ?? 0;
+
+    // Recipes used in a level are exactly the ones already unlocked in save
+    // state - the single source of truth also shown as "unlocked" in the
+    // Recipe Book, so the two can never drift out of sync.
+    final unlockedIds = state.unlockedRecipeIds;
+    final availableRecipes = RecipeCatalog.all.where((r) => unlockedIds.contains(r.id)).toList();
 
     _session = LevelSession(
       config: config,
       stationCount: 2 + extraStationLvl,
       cookSpeedMultiplier: (1 - cookSpeedLvl * 0.07).clamp(0.45, 1.0),
-      serviceSpeedMultiplier: (1 - serviceSpeedLvl * 0.05).clamp(0.5, 1.0),
       patienceBonusSeconds: patienceLvl * 2.0,
       tipMultiplierUpgrade: 1 + tipLvl * 0.08,
-      availableRecipes: RecipeCatalog.unlockedAt(widget.level),
+      availableRecipes: availableRecipes,
+      endless: widget.endless,
     );
     _flameGame = HenhavenGame(session: _session, backgroundAssetPath: config.kitchen.backgroundPath);
   }
@@ -167,7 +183,30 @@ class _GameScreenState extends State<GameScreen> {
     if (_resultProcessed) return;
     _resultProcessed = true;
     final state = GameStateScope.of(context);
-    final stars = _session.won ? _session.starsEarned() : 0;
+
+    if (widget.endless) {
+      final result = await state.completeEndlessRun(
+        score: _session.score,
+        coinsEarned: _session.coinsEarned,
+        tipsEarned: _session.tipsEarned,
+        ordersServedThisRun: _session.ordersServed,
+        dishesCookedThisRun: _session.dishesCooked,
+      );
+      // The combo streak (a daily task metric) is about *skill during the
+      // run*, not about clearing the level - it counts here too, regardless
+      // of how the run ended.
+      await state.reportComboStreak(_session.bestCombo);
+      if (mounted) {
+        _endlessResult = result;
+        _scheduleRebuild();
+      }
+      return;
+    }
+
+    // Stars reflect the score actually earned this run, even if the player
+    // didn't manage to serve every order before time ran out - a near-miss
+    // no longer flattens straight to zero stars.
+    final stars = _session.starsEarned();
     final result = await state.completeLevel(
       level: widget.level,
       won: _session.won,
@@ -179,8 +218,11 @@ class _GameScreenState extends State<GameScreen> {
       stars: stars,
       noMistakes: _session.missedCustomers == 0,
     );
+    // Combo streak counts toward the daily task regardless of whether the
+    // level itself was won - a player who strings together a great combo
+    // but runs out of time still deserves credit for it.
+    await state.reportComboStreak(_session.bestCombo);
     if (_session.won) {
-      await state.reportComboStreak(_session.bestCombo);
       _audio.playCoinCollect();
       if (result.newlyUnlockedRecipes.isNotEmpty) {
         _audio.playLevelComplete();
@@ -199,6 +241,7 @@ class _GameScreenState extends State<GameScreen> {
       _showResult = false;
       _resultProcessed = false;
       _levelResult = null;
+      _endlessResult = null;
       _session.removeListener(_onSessionTick);
       _buildSession();
       _session.addListener(_onSessionTick);
@@ -226,6 +269,78 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  /// Builds the counter backdrop with the cooking-station cards sitting on
+  /// it, sizing each square card to the room actually available so the
+  /// ingredient grid can never be clipped, and centering the row when it
+  /// fits (falling back to horizontal scroll only once enough stations are
+  /// unlocked that they genuinely overflow the width).
+  Widget _buildStations(BoxConstraints c) {
+    final n = _session.stations.length;
+    const hPad = 12.0; // 6 left + 6 right per card (the Padding below)
+    // Card HEIGHT is capped by the (scarce) vertical room, minus the small
+    // per-card padding so the body can never be taller than the area and get
+    // its top clipped. Card WIDTH then spreads into the (plentiful) spare
+    // horizontal room - a wide ~1.9:1 landscape rectangle - so the ingredient
+    // buttons on the right get a big, readable canvas.
+    final cardHeight = (c.maxHeight - 14).clamp(96.0, 230.0);
+    // The widest a card (incl. its own padding) may be so that n of them can
+    // never exceed the available width - the -2 is a rounding safety margin
+    // that guarantees (cardWidth + hPad) * n is strictly < maxWidth, killing
+    // the "RIGHT OVERFLOWED" stripe.
+    final maxCardWidth = (c.maxWidth - 2) / n - hPad;
+    var cardWidth = cardHeight * 1.9;
+    if (cardWidth > maxCardWidth) cardWidth = maxCardWidth;
+    if (cardWidth < 96) cardWidth = 96;
+
+    final stationsRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final station in _session.stations)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: StationCardWidget(
+              station: station,
+              width: cardWidth,
+              height: cardHeight,
+              onTapIngredient: (ingredientId) => _session.tapIngredient(station.id, ingredientId),
+              onServe: () => _session.serve(station.id),
+            ),
+          ),
+      ],
+    );
+
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        // Anchoring the counter+stations to the bottom (rather than centered)
+        // leaves the pretty kitchen background visible above them.
+        const Positioned.fill(child: CounterBackdrop()),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: (cardWidth + hPad) * n <= c.maxWidth
+              // FittedBox(scaleDown) is a hard guarantee against the overflow
+              // stripe: even if sub-pixel rounding (made likely by the global
+              // tablet scale factor) nudges the row a hair past the available
+              // width, it silently scales down a fraction instead of painting
+              // the yellow "RIGHT OVERFLOWED" bar. When it fits (the norm) no
+              // scaling happens and it just centers.
+              ? Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: stationsRow,
+                  ),
+                )
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: stationsRow,
+                ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -245,57 +360,46 @@ class _GameScreenState extends State<GameScreen> {
                 padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
                 child: Column(
                   children: [
-                    GameHud(session: _session, onPause: _togglePause),
+                    GameHud(session: _session, onPause: _togglePause, endless: widget.endless),
                     const SizedBox(height: 8),
-                    // Guests line up in a horizontal row right at the counter
-                    // (matching the reference game) instead of a side panel.
-                    CustomerQueueWidget(
-                      session: _session,
-                      onTapCustomer: (customer) {
-                        _session.assignCustomer(customer);
-                      },
-                    ),
-                    const SizedBox(height: 10),
+                    // The whole play area below the HUD is split by available
+                    // height (not fixed pixels): the guest counter on top and
+                    // the cooking stations below each take a share of whatever
+                    // room the device actually has. This is what keeps guests
+                    // big and the station cards fully un-clipped on a short
+                    // phone-in-landscape, while everything scales up nicely to
+                    // fill a tall iPad canvas.
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          // Tell the Flame layer exactly how tall this
-                          // counter/stations area is so the chef character
-                          // (drawn on the canvas behind it) can stand right
-                          // above the counter instead of guessing based on
-                          // the full screen height and ending up hidden
-                          // behind it with only his head showing.
-                          _flameGame.setKitchenAreaHeight(constraints.maxHeight);
-                          return Stack(
-                            alignment: Alignment.bottomCenter,
+                          final total = constraints.maxHeight;
+                          // Guests get ~half the room (clamped so they're never
+                          // cramped nor absurdly huge); stations take the rest.
+                          final queueHeight = (total * 0.5).clamp(150.0, 320.0);
+                          return Column(
                             children: [
-                              // Keeping the counter+stations anchored to the
-                              // bottom (rather than centered) leaves the
-                              // pretty kitchen background visible above
-                              // instead of the stations covering the middle
-                              // of the screen.
-                              const Positioned.fill(child: CounterBackdrop()),
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      for (final station in _session.stations)
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 10),
-                                          child: StationCardWidget(
-                                            station: station,
-                                            onTapIngredient: (ingredientId) =>
-                                                _session.tapIngredient(station.id, ingredientId),
-                                            onServe: () => _session.serve(station.id),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
+                              // Guests line up in a horizontal row right at the
+                              // counter (matching the reference game).
+                              CustomerQueueWidget(
+                                session: _session,
+                                height: queueHeight,
+                                onTapCustomer: (customer) {
+                                  _session.assignCustomer(customer);
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                              Expanded(
+                                child: LayoutBuilder(
+                                  builder: (context, stationConstraints) {
+                                    // Tell the Flame layer exactly how tall this
+                                    // counter/stations area is so the chef
+                                    // character (drawn on the canvas behind it)
+                                    // can stand right above the counter instead
+                                    // of guessing from the full screen height and
+                                    // ending up hidden behind it.
+                                    _flameGame.setKitchenAreaHeight(stationConstraints.maxHeight);
+                                    return _buildStations(stationConstraints);
+                                  },
                                 ),
                               ),
                             ],
@@ -316,9 +420,7 @@ class _GameScreenState extends State<GameScreen> {
                 },
                 onExit: () => Navigator.of(context).popUntil((r) => r.isFirst),
                 sfxEnabled: _audio.sfxEnabled,
-                musicEnabled: _audio.musicEnabled,
                 onToggleSfx: (v) => setState(() => _audio.setSfxEnabled(v)),
-                onToggleMusic: (v) => setState(() => _audio.setMusicEnabled(v)),
               ),
             if (_showResult)
               LevelResultOverlay(
@@ -326,10 +428,13 @@ class _GameScreenState extends State<GameScreen> {
                 score: _session.score,
                 coinsEarned: _session.coinsEarned,
                 tipsEarned: _session.tipsEarned,
-                stars: _session.won ? _session.starsEarned() : 0,
+                stars: widget.endless ? 0 : _session.starsEarned(),
                 newlyUnlockedRecipes: _levelResult?.newlyUnlockedRecipes ?? const [],
+                endless: widget.endless,
+                isNewBest: _endlessResult?.isNewBest ?? false,
+                bestScore: _endlessResult?.bestScore ?? 0,
                 onRetry: _restart,
-                onNext: (_session.won && widget.level < LevelCatalog.totalLevels)
+                onNext: (!widget.endless && _session.won && widget.level < LevelCatalog.totalLevels)
                     ? () {
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(builder: (_) => GameScreen(level: widget.level + 1)),

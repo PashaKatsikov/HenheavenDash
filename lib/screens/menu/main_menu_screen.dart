@@ -12,7 +12,6 @@ import '../howto/how_to_play_screen.dart';
 import '../levels/level_select_screen.dart';
 import '../recipes/recipe_book_screen.dart';
 import '../settings/settings_screen.dart';
-import '../shop/decor_shop_screen.dart';
 import '../shop/upgrade_shop_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -44,6 +43,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final state = GameStateScope.of(context);
     _maybeShowDailyReward(state);
 
+    // Tablet enlargement is handled globally at the app root (_TabletScaler),
+    // which scales the whole UI uniformly - so this screen keeps its natural
+    // phone-tuned sizes and simply gets scaled up along with everything else.
+    const ui = 1.0;
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -52,55 +56,60 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           Container(color: Colors.black.withValues(alpha: 0.14)),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              padding: EdgeInsets.symmetric(horizontal: 20 * ui, vertical: 6 * ui),
               // Fixed, non-scrolling layout: the menu is meant to sit still
-              // and fill the screen. The top bar and tile row keep their
-              // natural size, and the logo/play-button group in between
+              // and fill the screen. The top bar and bottom shortcut row
+              // (which now includes the Play button itself) keep their
+              // natural size, and the logo/best-score group in between
               // claims whatever vertical space is actually left over and is
-              // wrapped in a FittedBox(scaleDown) - so instead of guessing
-              // fixed pixel sizes that overflow on shorter screens/windows,
-              // it shrinks exactly as much as needed (and no more) to
-              // always fit, on any device, with zero risk of overflow.
+              // wrapped in a FittedBox(BoxFit.contain) - unlike scaleDown
+              // (which only ever shrinks, so on a roomy iPad or a tall
+              // window it just sits at its native size surrounded by empty
+              // space), contain also scales *up* to fill whatever room is
+              // actually available while still guaranteeing it can never
+              // overflow onto the top bar or the shortcut row below.
               child: Column(
                 children: [
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CurrencyChip(iconPath: 'assets/images/rewards/rw_coin_sack_tan.png', value: state.coins, compact: true),
-                            const SizedBox(width: 12),
-                            CurrencyChip(iconPath: 'assets/images/rewards/rw_coin_sack_brown.png', value: state.tips, compact: true),
+                            CurrencyChip(iconPath: 'assets/images/rewards/rw_coin_sack_tan.png', value: state.coins, compact: true, scale: ui),
+                            SizedBox(width: 12 * ui),
+                            CurrencyChip(iconPath: 'assets/images/rewards/rw_coin_sack_brown.png', value: state.tips, compact: true, scale: ui),
                             const Spacer(),
                             _HelpGlassButton(
+                              scale: ui,
                               onTap: () => _push(context, const HowToPlayScreen()),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10 * ui),
                             _IconGlassButton(
                               icon: Icons.settings,
+                              scale: ui,
                               onTap: () => _push(context, const SettingsScreen()),
                             ),
                           ],
                         ),
                         Expanded(
+                          // With the Play button moved down into the shortcut
+                          // row below, this block is *just* the logo + best
+                          // score - so BoxFit.contain now has the whole
+                          // leftover height to itself and scales the logo up
+                          // dramatically further than before.
                           child: Center(
                             child: FittedBox(
-                              fit: BoxFit.scaleDown,
+                              fit: BoxFit.contain,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Image.asset('assets/images/ui/logo_henhaven_dash.webp', width: 190),
+                                  Image.asset('assets/images/ui/logo_henhaven_dash.webp', width: 380),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Best score: ${state.bestScore}',
                                     style: AppTextStyles.bodyMedium.copyWith(
                                       color: AppColors.textOnDark,
-                                      fontSize: 13,
+                                      fontSize: 17,
                                       shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  FarmGateButton(
-                                    width: 208,
-                                    height: 56,
-                                    onPressed: () => _push(context, const LevelSelectScreen()),
                                   ),
                                 ],
                               ),
@@ -118,40 +127,49 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                 iconPath: 'assets/images/food/food_omelet_veggie.png',
                                 tint: AppColors.primary,
                                 angle: -0.045,
+                                scale: ui,
                                 onTap: () => _push(context, const RecipeBookScreen()),
                               ),
-                              const SizedBox(width: 10),
+                              SizedBox(width: 12 * ui),
                               _MenuTile(
                                 label: 'Upgrades',
                                 iconPath: 'assets/images/kitchen/kit_pan_copper.png',
                                 tint: AppColors.success,
                                 angle: 0.03,
-                                yOffset: -6,
+                                yOffset: -6 * ui,
+                                scale: ui,
                                 onTap: () => _push(context, const UpgradeShopScreen()),
                               ),
-                              const SizedBox(width: 10),
-                              _MenuTile(
-                                label: 'Farm Shop',
-                                iconPath: 'assets/images/decor/decor_sunflower_pot.png',
-                                tint: AppColors.accent,
-                                angle: -0.02,
-                                onTap: () => _push(context, const DecorShopScreen()),
+                              SizedBox(width: 14 * ui),
+                              // The primary action: noticeably taller than the
+                              // plain shortcut tiles either side of it, and
+                              // since the row aligns everything to a shared
+                              // bottom edge (crossAxisAlignment.end), that
+                              // extra height alone makes it rise above them
+                              // like a raised centre FAB - no manual offset
+                              // needed, and no risk of it looking detached.
+                              FarmGateButton(
+                                width: 190 * ui,
+                                height: 98 * ui,
+                                onPressed: () => _push(context, const LevelSelectScreen()),
                               ),
-                              const SizedBox(width: 10),
+                              SizedBox(width: 14 * ui),
                               _MenuTile(
                                 label: 'Daily Tasks',
                                 iconPath: 'assets/images/rewards/rw_chest_open_a.png',
                                 tint: AppColors.surfaceDarkAlt,
                                 angle: 0.045,
-                                yOffset: -4,
+                                yOffset: -4 * ui,
+                                scale: ui,
                                 onTap: () => _push(context, const DailyTasksScreen()),
                               ),
-                              const SizedBox(width: 10),
+                              SizedBox(width: 12 * ui),
                               _MenuTile(
                                 label: 'Daily Gift',
                                 iconPath: 'assets/images/rewards/rw_chest_closed.png',
                                 tint: AppColors.cta,
                                 angle: -0.03,
+                                scale: ui,
                                 badge: state.canClaimDailyReward,
                                 onTap: () => DailyRewardDialog.show(context, state),
                               ),
@@ -192,6 +210,7 @@ class _MenuTile extends StatelessWidget {
     this.angle = 0,
     this.yOffset = 0,
     this.badge = false,
+    this.scale = 1.0,
   });
 
   final String label;
@@ -201,6 +220,7 @@ class _MenuTile extends StatelessWidget {
   final double angle;
   final double yOffset;
   final bool badge;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
@@ -211,8 +231,8 @@ class _MenuTile extends StatelessWidget {
         child: GestureDetector(
           onTap: onTap,
           child: RusticPanel(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-            borderRadius: 14,
+            padding: EdgeInsets.symmetric(horizontal: 9 * scale, vertical: 7 * scale),
+            borderRadius: 14 * scale,
             gradient: _tintedWood(tint),
             borderColor: badge ? AppColors.accent : tint.withValues(alpha: 0.7),
             child: Column(
@@ -221,25 +241,25 @@ class _MenuTile extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Image.asset(iconPath, width: 32, height: 32),
+                    Image.asset(iconPath, width: 32 * scale, height: 32 * scale),
                     if (badge)
                       Positioned(
-                        top: -4,
-                        right: -4,
+                        top: -4 * scale,
+                        right: -4 * scale,
                         child: Container(
-                          width: 12,
-                          height: 12,
+                          width: 12 * scale,
+                          height: 12 * scale,
                           decoration: BoxDecoration(
                             color: AppColors.cta,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
+                            border: Border.all(color: Colors.white, width: 1.5 * scale),
                           ),
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(height: 3),
-                Text(label, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textOnDark, fontSize: 10.5)),
+                SizedBox(height: 3 * scale),
+                Text(label, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textOnDark, fontSize: 10.5 * scale)),
               ],
             ),
           ),
@@ -250,20 +270,21 @@ class _MenuTile extends StatelessWidget {
 }
 
 class _IconGlassButton extends StatelessWidget {
-  const _IconGlassButton({required this.icon, required this.onTap});
+  const _IconGlassButton({required this.icon, required this.onTap, this.scale = 1.0});
 
   final IconData icon;
   final VoidCallback onTap;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: RusticPanel(
-        padding: const EdgeInsets.all(8),
-        borderRadius: 26,
+        padding: EdgeInsets.all(8 * scale),
+        borderRadius: 26 * scale,
         pegs: false,
-        child: Icon(icon, color: AppColors.accent, size: 20),
+        child: Icon(icon, color: AppColors.accent, size: 20 * scale),
       ),
     );
   }
@@ -272,28 +293,29 @@ class _IconGlassButton extends StatelessWidget {
 /// "How to play" button - a friendly hand-lettered "?" in the brand font so it
 /// reads as part of the game art rather than a stock system glyph.
 class _HelpGlassButton extends StatelessWidget {
-  const _HelpGlassButton({required this.onTap});
+  const _HelpGlassButton({required this.onTap, this.scale = 1.0});
 
   final VoidCallback onTap;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: RusticPanel(
-        padding: const EdgeInsets.all(8),
-        borderRadius: 26,
+        padding: EdgeInsets.all(8 * scale),
+        borderRadius: 26 * scale,
         pegs: false,
         child: SizedBox(
-          width: 20,
-          height: 20,
+          width: 20 * scale,
+          height: 20 * scale,
           child: Center(
             child: Text(
               '?',
               style: TextStyle(
                 fontFamily: AppTextStyles.heading,
                 fontWeight: FontWeight.w800,
-                fontSize: 19,
+                fontSize: 19 * scale,
                 height: 1,
                 color: AppColors.accent,
               ),

@@ -167,9 +167,6 @@ class RecipeCatalog {
 
   static Recipe byId(String id) => all.firstWhere((e) => e.id == id);
 
-  static List<Recipe> unlockedAt(int level) =>
-      all.where((r) => r.unlockLevel <= level).toList();
-
   static List<Recipe> newlyUnlockedAt(int level) =>
       all.where((r) => r.unlockLevel == level).toList();
 }

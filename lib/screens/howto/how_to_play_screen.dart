@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/glass_panel.dart';
+import '../../widgets/responsive_content.dart';
 
 /// A friendly, illustrated "How to Play" screen. Each step reuses the game's
 /// own sprite art (customer, ingredients, dish, coins) so the tutorial matches
@@ -69,7 +70,9 @@ class HowToPlayScreen extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: ListView(
+                  // ResponsiveContent keeps this list from stretching edge-to-edge
+                  // on iPad's much wider landscape canvas.
+                  child: ResponsiveContent(child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                     children: [
                       for (final step in _steps)
@@ -78,7 +81,7 @@ class HowToPlayScreen extends StatelessWidget {
                           child: _StepCard(step: step),
                         ),
                     ],
-                  ),
+                  )),
                 ),
               ],
             ),

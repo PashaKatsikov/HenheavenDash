@@ -134,7 +134,17 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(bgAsset, fit: BoxFit.cover),
+          // The game logo is baked into this loading artwork rather than a
+          // separate layer, so a gentle centered zoom is what makes it read
+          // bigger - it only trims a little of the decorative farm scenery
+          // at the very edges, and never touches the "Loading..." text /
+          // progress bar below since those are separate, unscaled widgets.
+          ClipRect(
+            child: Transform.scale(
+              scale: 1.18,
+              child: Image.asset(bgAsset, fit: BoxFit.cover),
+            ),
+          ),
           Positioned(
             left: 0,
             right: 0,

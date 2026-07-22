@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'models/daily_reward.dart';
 import 'models/daily_task.dart';
-import 'models/decor_item.dart';
 import 'models/recipe.dart';
 import 'models/upgrade.dart';
 import 'persistence/save_service.dart';
@@ -27,7 +26,7 @@ class GameState extends ChangeNotifier {
   Map<String, int> get upgradeLevels => _save.upgradeLevels;
   Map<int, int> get starsPerLevel => _save.starsPerLevel;
   List<ActiveDailyTask> get dailyTasks => _dailies.tasks;
-  Set<String> get ownedDecorIds => _save.ownedDecorIds;
+  int get bestEndlessScore => _save.bestEndlessScore;
 
   int get dailyRewardStreakDay => _dailyReward.streakDay;
   bool get canClaimDailyReward => _dailyReward.canClaim;
@@ -49,24 +48,6 @@ class GameState extends ChangeNotifier {
     if (reward.tips > 0) await _save.addTips(reward.tips);
     notifyListeners();
     return reward;
-  }
-
-  bool ownsDecor(String id) => _save.ownedDecorIds.contains(id);
-
-  bool canAffordDecor(String id) {
-    if (ownsDecor(id)) return false;
-    final def = DecorCatalog.byId(id);
-    return coins >= def.cost;
-  }
-
-  Future<bool> purchaseDecor(String id) async {
-    if (ownsDecor(id)) return false;
-    final def = DecorCatalog.byId(id);
-    if (coins < def.cost) return false;
-    await _save.spendCoins(def.cost);
-    await _save.unlockDecor(id);
-    notifyListeners();
-    return true;
   }
 
   int upgradeLevelFor(String id) => upgradeLevels[id] ?? 0;
@@ -108,11 +89,14 @@ class GameState extends ChangeNotifier {
     await _save.addOrdersServed(ordersServedThisRun);
     await _save.addDishesCooked(dishesCookedThisRun);
     await _save.reportScore(score);
+    // Stars reflect the score the player actually earned, so even a run cut
+    // short by the clock (or a 5th missed customer) still shows fair credit
+    // for how well it went instead of always flattening to zero.
+    await _save.setStarsForLevel(level, stars);
 
     final newlyUnlocked = <Recipe>[];
     if (won) {
       await _save.unlockLevel(level + 1);
-      await _save.setStarsForLevel(level, stars);
       for (final r in RecipeCatalog.newlyUnlockedAt(level + 1)) {
         if (!_save.unlockedRecipeIds.contains(r.id)) {
           await _save.unlockRecipe(r.id);
@@ -128,6 +112,32 @@ class GameState extends ChangeNotifier {
 
     notifyListeners();
     return LevelResult(newlyUnlockedRecipes: newlyUnlocked);
+  }
+
+  /// Called when an Endless run ends (3 mistakes made). There's no level to
+  /// unlock or recipes to award - just rewards banked, stats/dailies updated,
+  /// and the persisted high score bumped if this run beat it.
+  Future<EndlessResult> completeEndlessRun({
+    required int score,
+    required int coinsEarned,
+    required int tipsEarned,
+    required int ordersServedThisRun,
+    required int dishesCookedThisRun,
+  }) async {
+    await _save.addCoins(coinsEarned);
+    await _save.addTips(tipsEarned);
+    await _save.addOrdersServed(ordersServedThisRun);
+    await _save.addDishesCooked(dishesCookedThisRun);
+    await _save.reportScore(score);
+    final isNewBest = score > _save.bestEndlessScore;
+    await _save.reportEndlessScore(score);
+
+    await _dailies.reportProgress(DailyTaskMetric.ordersServed, ordersServedThisRun);
+    await _dailies.reportProgress(DailyTaskMetric.dishesCooked, dishesCookedThisRun);
+    await _dailies.reportProgress(DailyTaskMetric.coinsEarned, coinsEarned + tipsEarned);
+
+    notifyListeners();
+    return EndlessResult(isNewBest: isNewBest, bestScore: _save.bestEndlessScore);
   }
 
   Future<void> reportComboStreak(int streak) async {
@@ -147,4 +157,10 @@ class GameState extends ChangeNotifier {
 class LevelResult {
   LevelResult({required this.newlyUnlockedRecipes});
   final List<Recipe> newlyUnlockedRecipes;
+}
+
+class EndlessResult {
+  EndlessResult({required this.isNewBest, required this.bestScore});
+  final bool isNewBest;
+  final int bestScore;
 }
