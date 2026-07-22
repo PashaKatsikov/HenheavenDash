@@ -54,11 +54,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
               // Fixed, non-scrolling layout: the menu is meant to sit still
-              // and fill the screen. Everything is sized to fit within the
-              // available height and distributed with spaceBetween, so the
-              // screen never drifts/scrolls under the user's finger.
+              // and fill the screen. The top bar and tile row keep their
+              // natural size, and the logo/play-button group in between
+              // claims whatever vertical space is actually left over and is
+              // wrapped in a FittedBox(scaleDown) - so instead of guessing
+              // fixed pixel sizes that overflow on shorter screens/windows,
+              // it shrinks exactly as much as needed (and no more) to
+              // always fit, on any device, with zero risk of overflow.
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,73 +80,83 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             ),
                           ],
                         ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset('assets/images/ui/logo_henhaven_dash.webp', width: 168),
-                            Text(
-                              'Best score: ${state.bestScore}',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textOnDark,
-                                fontSize: 13,
-                                shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
+                        Expanded(
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset('assets/images/ui/logo_henhaven_dash.webp', width: 190),
+                                  Text(
+                                    'Best score: ${state.bestScore}',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textOnDark,
+                                      fontSize: 13,
+                                      shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FarmGateButton(
+                                    width: 208,
+                                    height: 56,
+                                    onPressed: () => _push(context, const LevelSelectScreen()),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            FarmGateButton(
-                              width: 208,
-                              height: 56,
-                              onPressed: () => _push(context, const LevelSelectScreen()),
-                            ),
-                          ],
+                          ),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            _MenuTile(
-                              label: 'Recipes',
-                              iconPath: 'assets/images/food/food_omelet_veggie.png',
-                              tint: AppColors.primary,
-                              angle: -0.045,
-                              onTap: () => _push(context, const RecipeBookScreen()),
-                            ),
-                            const SizedBox(width: 10),
-                            _MenuTile(
-                              label: 'Upgrades',
-                              iconPath: 'assets/images/kitchen/kit_pan_copper.png',
-                              tint: AppColors.success,
-                              angle: 0.03,
-                              yOffset: -6,
-                              onTap: () => _push(context, const UpgradeShopScreen()),
-                            ),
-                            const SizedBox(width: 10),
-                            _MenuTile(
-                              label: 'Farm Shop',
-                              iconPath: 'assets/images/decor/decor_sunflower_pot.png',
-                              tint: AppColors.accent,
-                              angle: -0.02,
-                              onTap: () => _push(context, const DecorShopScreen()),
-                            ),
-                            const SizedBox(width: 10),
-                            _MenuTile(
-                              label: 'Daily Tasks',
-                              iconPath: 'assets/images/rewards/rw_chest_open_a.png',
-                              tint: AppColors.surfaceDarkAlt,
-                              angle: 0.045,
-                              yOffset: -4,
-                              onTap: () => _push(context, const DailyTasksScreen()),
-                            ),
-                            const SizedBox(width: 10),
-                            _MenuTile(
-                              label: 'Daily Gift',
-                              iconPath: 'assets/images/rewards/rw_chest_closed.png',
-                              tint: AppColors.cta,
-                              angle: -0.03,
-                              badge: state.canClaimDailyReward,
-                              onTap: () => DailyRewardDialog.show(context, state),
-                            ),
-                          ],
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              _MenuTile(
+                                label: 'Recipes',
+                                iconPath: 'assets/images/food/food_omelet_veggie.png',
+                                tint: AppColors.primary,
+                                angle: -0.045,
+                                onTap: () => _push(context, const RecipeBookScreen()),
+                              ),
+                              const SizedBox(width: 10),
+                              _MenuTile(
+                                label: 'Upgrades',
+                                iconPath: 'assets/images/kitchen/kit_pan_copper.png',
+                                tint: AppColors.success,
+                                angle: 0.03,
+                                yOffset: -6,
+                                onTap: () => _push(context, const UpgradeShopScreen()),
+                              ),
+                              const SizedBox(width: 10),
+                              _MenuTile(
+                                label: 'Farm Shop',
+                                iconPath: 'assets/images/decor/decor_sunflower_pot.png',
+                                tint: AppColors.accent,
+                                angle: -0.02,
+                                onTap: () => _push(context, const DecorShopScreen()),
+                              ),
+                              const SizedBox(width: 10),
+                              _MenuTile(
+                                label: 'Daily Tasks',
+                                iconPath: 'assets/images/rewards/rw_chest_open_a.png',
+                                tint: AppColors.surfaceDarkAlt,
+                                angle: 0.045,
+                                yOffset: -4,
+                                onTap: () => _push(context, const DailyTasksScreen()),
+                              ),
+                              const SizedBox(width: 10),
+                              _MenuTile(
+                                label: 'Daily Gift',
+                                iconPath: 'assets/images/rewards/rw_chest_closed.png',
+                                tint: AppColors.cta,
+                                angle: -0.03,
+                                badge: state.canClaimDailyReward,
+                                onTap: () => DailyRewardDialog.show(context, state),
+                              ),
+                            ],
+                          ),
                         ),
                 ],
               ),
