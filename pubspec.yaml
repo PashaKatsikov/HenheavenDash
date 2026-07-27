@@ -22,11 +22,27 @@ dependencies:
   # Persistence for coins, upgrades, unlocked recipes, daily tasks, best score
   shared_preferences: ^2.5.3
 
-  # Privacy Policy / Support screens
+  # Privacy Policy / Support screens + gray-flow content shell
   webview_flutter: ^4.13.0
+  webview_flutter_wkwebview: ^3.26.0
 
   # Keeps the device screen on while playing (avoids mid-level sleep/lock)
   wakelock_plus: ^1.3.2
+
+  # ── Gray-flow: attribution + push (do not downgrade this stack) ──
+  appsflyer_sdk: ^6.18.0
+  app_tracking_transparency: ^2.0.7
+  firebase_core: ^4.12.1
+  firebase_messaging: ^16.4.3
+  firebase_app_check: ^0.4.5+2
+  # ── Gray-flow: networking / device / storage ──
+  # 7.1+ requires Xcode 26.1 for NWPath.isUltraConstrained.
+  connectivity_plus: '>=7.0.0 <7.1.0'
+  http: ^1.5.0
+  # 12.4+ calls an Xcode 26.1-only NSProcessInfo selector.
+  device_info_plus: 12.3.0
+  flutter_secure_storage: ^10.3.1
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

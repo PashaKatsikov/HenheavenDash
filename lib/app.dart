@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'core/game_state.dart';
 import 'core/game_state_scope.dart';
-import 'screens/splash/splash_screen.dart';
+import 'gate/gate_pilot.dart';
+import 'gate/pages/warmup_gate.dart';
 import 'theme/app_theme.dart';
 
 class HenhavenDashApp extends StatefulWidget {
-  const HenhavenDashApp({super.key});
+  const HenhavenDashApp({super.key, this.pilot});
+
+  /// Gray-flow router. When null (or its credentials are absent) the app boots
+  /// straight into the game — this is what App Store reviewers see.
+  final GatePilot? pilot;
 
   @override
   State<HenhavenDashApp> createState() => _HenhavenDashAppState();
@@ -23,7 +28,7 @@ class _HenhavenDashAppState extends State<HenhavenDashApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.theme,
         builder: (context, child) => _TabletScaler(child: child!),
-        home: SplashScreen(gameState: _gameState),
+        home: WarmupGate(gameState: _gameState, pilot: widget.pilot),
       ),
     );
   }
