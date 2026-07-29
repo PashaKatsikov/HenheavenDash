@@ -53,7 +53,8 @@ class _WarmupGateState extends State<WarmupGate>
   bool _prepDone = false;
   late final DateTime _startTime;
   late final AnimationController _pulse;
-  Timer? _hardDeadline;
+  Timer? _prepDeadline;
+  Timer? _lastResort;
 
   static const Duration _minSplash = Duration(milliseconds: 1200);
 
@@ -72,12 +73,22 @@ class _WarmupGateState extends State<WarmupGate>
       DeviceOrientation.landscapeRight,
     ]);
     _startDots();
-    _hardDeadline = Timer(const Duration(seconds: 9), () {
-      if (mounted && !_navigating) {
-        _prepDone = true;
-        _target ??= const DinerTarget();
-        _maybeNavigate();
-      }
+    // Unblocks navigation when the game warm-up stalls (a wedged asset decode
+    // or audio init). It must never invent a target: every stage of the gate
+    // pipeline is already time-boxed, so waiting for its real answer is what
+    // keeps an attributed user out of the game on a slow launch.
+    _prepDeadline = Timer(const Duration(seconds: 9), () {
+      if (!mounted || _navigating) return;
+      _prepDone = true;
+      _maybeNavigate();
+    });
+    // Absolute floor, past the pipeline's own worst case, so the splash can
+    // never stay on screen forever.
+    _lastResort = Timer(const Duration(seconds: 42), () {
+      if (!mounted || _navigating) return;
+      _prepDone = true;
+      _target ??= const DinerTarget();
+      _maybeNavigate();
     });
   }
 
@@ -119,7 +130,9 @@ class _WarmupGateState extends State<WarmupGate>
       }
     } catch (_) {}
     _prepDone = true;
+    _prepDeadline?.cancel();
     _bumpPrep(1);
+    _maybeNavigate();
   }
 
   void _bumpPrep(double value) {
@@ -151,13 +164,16 @@ class _WarmupGateState extends State<WarmupGate>
 
   Future<void> _maybeNavigate() async {
     if (_navigating || _target == null || !_prepDone) return;
+    // Claimed before the min-splash await, so the prep and pipeline callbacks
+    // racing into here can't both push a replacement route.
+    _navigating = true;
+    _prepDeadline?.cancel();
+    _lastResort?.cancel();
     final elapsed = DateTime.now().difference(_startTime);
     if (elapsed < _minSplash) {
       await Future<void>.delayed(_minSplash - elapsed);
     }
-    if (!mounted || _navigating) return;
-    _navigating = true;
-    _hardDeadline?.cancel();
+    if (!mounted) return;
     await _openTarget(_target!);
   }
 
@@ -233,7 +249,8 @@ class _WarmupGateState extends State<WarmupGate>
 
   @override
   void dispose() {
-    _hardDeadline?.cancel();
+    _prepDeadline?.cancel();
+    _lastResort?.cancel();
     _pulse.dispose();
     super.dispose();
   }

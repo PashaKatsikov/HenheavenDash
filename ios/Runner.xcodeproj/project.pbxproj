@@ -7,9 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0983B960E264BEA743D51830 /* DashPushService.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FB80D9532682D94E2ACE1FD4 /* DashPushService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		1E8E23EEA062EA8CD87EE55F /* Pods_DashPushService.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66FFAAF8A53461387185EFC1 /* Pods_DashPushService.framework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		5001D0554A73AC9C727860DC /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6DF167C546CC2FCDE2B2F99B /* GoogleService-Info.plist */; };
+		5E623CD4B8BC09F9C9308361 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A839CD90D686A37BE15D462 /* NotificationService.swift */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		87BB78287E685CF53D3A28AC /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ADF900586B7B6008AB9504BD /* Pods_Runner.framework */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -17,9 +21,6 @@
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		D40389F9D9F9087F605D06EE /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 573854C84D8FA8E4DF26CB47 /* Pods_RunnerTests.framework */; };
 		FB6E95B0BD03C7AF961AB5DD /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96B31E7C79EBE18CD08C702 /* SceneDelegate.swift */; };
-		5E623CD4B8BC09F9C9308361 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A839CD90D686A37BE15D462 /* NotificationService.swift */; };
-		5001D0554A73AC9C727860DC /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6DF167C546CC2FCDE2B2F99B /* GoogleService-Info.plist */; };
-		0983B960E264BEA743D51830 /* DashPushService.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FB80D9532682D94E2ACE1FD4 /* DashPushService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,13 +70,20 @@
 		2DA4E6E6F3B49F178DF06CC0 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		37B44D742FD4DB548B80AF90 /* Pods-DashPushService.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DashPushService.profile.xcconfig"; path = "Target Support Files/Pods-DashPushService/Pods-DashPushService.profile.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		573854C84D8FA8E4DF26CB47 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C7DCE760E49E4B6C3B42088 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		5E12D95F9EBF2C7A2D4AFF6D /* Pods-DashPushService.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DashPushService.debug.xcconfig"; path = "Target Support Files/Pods-DashPushService/Pods-DashPushService.debug.xcconfig"; sourceTree = "<group>"; };
+		66FFAAF8A53461387185EFC1 /* Pods_DashPushService.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DashPushService.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6DF167C546CC2FCDE2B2F99B /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		7046B52D9BB98B94E35A7C73 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
+		868F6E8EE8587536455193AF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8A839CD90D686A37BE15D462 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		8C7E9ED9E1507E8657064338 /* Runner.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		8F155D8620547F387AB88EC5 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
@@ -84,14 +92,11 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A96B31E7C79EBE18CD08C702 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		ADF900586B7B6008AB9504BD /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B965B95697E7CC0F4E32604F /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		D3F353EC4911B1BF86C60AE9 /* Pods-DashPushService.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DashPushService.release.xcconfig"; path = "Target Support Files/Pods-DashPushService/Pods-DashPushService.release.xcconfig"; sourceTree = "<group>"; };
 		E5944A45EBB41825EA060BC0 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
-		6DF167C546CC2FCDE2B2F99B /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		A96B31E7C79EBE18CD08C702 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		8C7E9ED9E1507E8657064338 /* Runner.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
-		8A839CD90D686A37BE15D462 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
-		868F6E8EE8587536455193AF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FB80D9532682D94E2ACE1FD4 /* DashPushService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DashPushService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -104,18 +109,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		86CEC347DA899DE78AC45EFE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1E8E23EEA062EA8CD87EE55F /* Pods_DashPushService.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EB1CF9000F007C117D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				87BB78287E685CF53D3A28AC /* Pods_Runner.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		86CEC347DA899DE78AC45EFE /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,6 +134,15 @@
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
 			);
 			path = RunnerTests;
+			sourceTree = "<group>";
+		};
+		921A6ACF1B8846E0E1997FF2 /* DashPushService */ = {
+			isa = PBXGroup;
+			children = (
+				8A839CD90D686A37BE15D462 /* NotificationService.swift */,
+				868F6E8EE8587536455193AF /* Info.plist */,
+			);
+			path = DashPushService;
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -182,15 +197,6 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
-		921A6ACF1B8846E0E1997FF2 /* DashPushService */ = {
-			isa = PBXGroup;
-			children = (
-				8A839CD90D686A37BE15D462 /* NotificationService.swift */,
-				868F6E8EE8587536455193AF /* Info.plist */,
-			);
-			path = DashPushService;
-			sourceTree = "<group>";
-		};
 		B27D0D56245018D1BEC8C690 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -200,6 +206,9 @@
 				E5944A45EBB41825EA060BC0 /* Pods-RunnerTests.debug.xcconfig */,
 				7046B52D9BB98B94E35A7C73 /* Pods-RunnerTests.release.xcconfig */,
 				8F155D8620547F387AB88EC5 /* Pods-RunnerTests.profile.xcconfig */,
+				5E12D95F9EBF2C7A2D4AFF6D /* Pods-DashPushService.debug.xcconfig */,
+				D3F353EC4911B1BF86C60AE9 /* Pods-DashPushService.release.xcconfig */,
+				37B44D742FD4DB548B80AF90 /* Pods-DashPushService.profile.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -210,6 +219,7 @@
 			children = (
 				ADF900586B7B6008AB9504BD /* Pods_Runner.framework */,
 				573854C84D8FA8E4DF26CB47 /* Pods_RunnerTests.framework */,
+				66FFAAF8A53461387185EFC1 /* Pods_DashPushService.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -236,6 +246,24 @@
 			productReference = 331C8081294A63A400263BE5 /* RunnerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		80D234595EEEA96CE3D923CF /* DashPushService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3266D4079736A3803CB82F98 /* Build configuration list for PBXNativeTarget "DashPushService" */;
+			buildPhases = (
+				4D9F65A683322C73FC1A98DD /* [CP] Check Pods Manifest.lock */,
+				1F3692990A8F1CAABFDA6D47 /* Sources */,
+				86CEC347DA899DE78AC45EFE /* Frameworks */,
+				FAD1E53625A5080237EA7FB1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DashPushService;
+			productName = DashPushService;
+			productReference = FB80D9532682D94E2ACE1FD4 /* DashPushService.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
@@ -249,6 +277,7 @@
 				C5C24C41FD522082C5737494 /* Embed App Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				232C39EBFFDC910B53C20C6B /* [CP] Embed Pods Frameworks */,
+				71D75CFD37A451FF7760C23D /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -259,23 +288,6 @@
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
-		};
-		80D234595EEEA96CE3D923CF /* DashPushService */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 3266D4079736A3803CB82F98 /* Build configuration list for PBXNativeTarget "DashPushService" */;
-			buildPhases = (
-				1F3692990A8F1CAABFDA6D47 /* Sources */,
-				86CEC347DA899DE78AC45EFE /* Frameworks */,
-				FAD1E53625A5080237EA7FB1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = DashPushService;
-			productName = DashPushService;
-			productReference = FB80D9532682D94E2ACE1FD4 /* DashPushService.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -291,12 +303,12 @@
 						CreatedOnToolsVersion = 14.0;
 						TestTargetID = 97C146ED1CF9000F007C117D;
 					};
+					80D234595EEEA96CE3D923CF = {
+						CreatedOnToolsVersion = 16.0;
+					};
 					97C146ED1CF9000F007C117D = {
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
-					};
-					80D234595EEEA96CE3D923CF = {
-						CreatedOnToolsVersion = 16.0;
 					};
 				};
 			};
@@ -378,11 +390,9 @@
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -404,6 +414,43 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
+		};
+		4D9F65A683322C73FC1A98DD /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-DashPushService-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		71D75CFD37A451FF7760C23D /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 		964B475DB1BE9C1AD35FD7B6 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -445,6 +492,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1F3692990A8F1CAABFDA6D47 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E623CD4B8BC09F9C9308361 /* NotificationService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C807D294A63A400263BE5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -460,14 +515,6 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				FB6E95B0BD03C7AF961AB5DD /* SceneDelegate.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1F3692990A8F1CAABFDA6D47 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				5E623CD4B8BC09F9C9308361 /* NotificationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -631,6 +678,26 @@
 			};
 			name = Profile;
 		};
+		6B52F69EC30AD2131D1E2EE9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D3F353EC4911B1BF86C60AE9 /* Pods-DashPushService.release.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9WL5YJYU4;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = DashPushService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.henhaven.dashgame.NotificationService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		97C147031CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -789,8 +856,29 @@
 			};
 			name = Release;
 		};
+		C25413370E7A820A44865A58 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 37B44D742FD4DB548B80AF90 /* Pods-DashPushService.profile.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9WL5YJYU4;
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = DashPushService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.henhaven.dashgame.NotificationService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
 		E41FB35E9AEE7BFD2C806716 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5E12D95F9EBF2C7A2D4AFF6D /* Pods-DashPushService.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -809,47 +897,19 @@
 			};
 			name = Debug;
 		};
-		6B52F69EC30AD2131D1E2EE9 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = Y9WL5YJYU4;
-				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = DashPushService/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.henhaven.dashgame.NotificationService;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		C25413370E7A820A44865A58 /* Profile */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = Y9WL5YJYU4;
-				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = DashPushService/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.henhaven.dashgame.NotificationService;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Profile;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3266D4079736A3803CB82F98 /* Build configuration list for PBXNativeTarget "DashPushService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E41FB35E9AEE7BFD2C806716 /* Debug */,
+				6B52F69EC30AD2131D1E2EE9 /* Release */,
+				C25413370E7A820A44865A58 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -876,16 +936,6 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		3266D4079736A3803CB82F98 /* Build configuration list for PBXNativeTarget "DashPushService" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E41FB35E9AEE7BFD2C806716 /* Debug */,
-				6B52F69EC30AD2131D1E2EE9 /* Release */,
-				C25413370E7A820A44865A58 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

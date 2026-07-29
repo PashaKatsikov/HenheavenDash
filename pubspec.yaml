@@ -2,7 +2,7 @@ name: henhaven_dash
 description: "Henhaven Dash - a cozy farm cooking time-management game"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+3
 
 environment:
   sdk: ^3.10.8
@@ -95,8 +95,8 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon/icon_legacy.png"
-  adaptive_icon_background: "#F2760F"
-  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  image_path: "assets/icon/icon2.png"
+  adaptive_icon_background: "#3D0A6B"
+  adaptive_icon_foreground: "assets/icon/icon2.png"
   min_sdk_android: 21
   remove_alpha_ios: true

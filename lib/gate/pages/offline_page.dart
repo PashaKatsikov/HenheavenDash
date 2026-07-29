@@ -94,85 +94,86 @@ class _OfflinePageState extends State<OfflinePage> {
         ),
         child: SafeArea(
           bottom: false,
-          left: false,
-          right: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  width: badgeSize,
-                  height: badgeSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.08),
-                    border: Border.all(
-                      color: _cream.withValues(alpha: 0.35),
-                      width: 3,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Container(
+                    width: badgeSize,
+                    height: badgeSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.08),
+                      border: Border.all(
+                        color: _cream.withValues(alpha: 0.35),
+                        width: 3,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.wifi_off_rounded,
+                      size: badgeSize * 0.5,
+                      color: _cream,
                     ),
                   ),
-                  child: Icon(
-                    Icons.wifi_off_rounded,
-                    size: badgeSize * 0.5,
-                    color: _cream,
+                  SizedBox(height: landscape ? 18 : 28),
+                  const Text(
+                    'NO INTERNET CONNECTION',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _cream,
+                      fontFamily: 'Baloo2',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                      height: 1.15,
+                    ),
                   ),
-                ),
-                SizedBox(height: landscape ? 18 : 28),
-                const Text(
-                  'NO INTERNET CONNECTION',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _cream,
-                    fontFamily: 'Baloo2',
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.4,
-                    height: 1.15,
+                  const SizedBox(height: 10),
+                  Text(
+                    'Check your connection and try again',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _cream.withValues(alpha: 0.78),
+                      fontFamily: 'Poppins',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      height: 1.3,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Check your connection and try again',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _cream.withValues(alpha: 0.78),
-                    fontFamily: 'Poppins',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    height: 1.3,
+                  SizedBox(height: landscape ? 22 : 34),
+                  _RetryButton(
+                    width: width,
+                    height: landscape ? 66 : 72,
+                    busy: _checking,
+                    onTap: _retry,
+                    gradient: const LinearGradient(
+                      colors: <Color>[_terracotta, _terracottaDark],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
-                ),
-                SizedBox(height: landscape ? 22 : 34),
-                _RetryButton(
-                  width: width,
-                  height: landscape ? 66 : 72,
-                  busy: _checking,
-                  onTap: _retry,
-                  gradient: const LinearGradient(
-                    colors: <Color>[_terracotta, _terracottaDark],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 180),
-                  child: _stillOffline
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 14),
-                          child: Text(
-                            'No connection yet',
-                            style: TextStyle(
-                              color: _cream.withValues(alpha: 0.9),
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 180),
+                    child: _stillOffline
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 14),
+                            child: Text(
+                              'No connection yet',
+                              style: TextStyle(
+                                color: _cream.withValues(alpha: 0.9),
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
