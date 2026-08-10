@@ -81,13 +81,6 @@ class _PushInvitePageState extends State<PushInvitePage> {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final landscape = media.orientation == Orientation.landscape;
-    final width = landscape
-        ? (media.size.width * 0.42).clamp(320.0, 560.0)
-        : (media.size.width * 0.80).clamp(280.0, 440.0);
-    final badgeSize = landscape ? 92.0 : 128.0;
-
     return Scaffold(
       backgroundColor: _duskDeep,
       body: Container(
@@ -103,77 +96,253 @@ class _PushInvitePageState extends State<PushInvitePage> {
           bottom: false,
           left: false,
           right: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  width: badgeSize,
-                  height: badgeSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _straw.withValues(alpha: 0.16),
-                    border: Border.all(
-                      color: _straw.withValues(alpha: 0.55),
-                      width: 3,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.notifications_active_rounded,
-                    size: badgeSize * 0.5,
-                    color: _straw,
-                  ),
+          // LayoutBuilder + SingleChildScrollView means the invite always
+          // laysgracefully — landscape iPhones are short vertically, so a
+          // fixed Column occasionally overflowed by a few px. The scroll
+          // wrapper absorbs that safely without visible scrollbars, while
+          // the Row/Column switch actually uses the wide landscape canvas
+          // instead of leaving big empty stripes on each side.
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isLandscape =
+                  constraints.maxWidth > constraints.maxHeight;
+              return SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isLandscape ? 36 : 28,
+                  vertical: isLandscape ? 20 : 24,
                 ),
-                SizedBox(height: landscape ? 16 : 26),
-                const Text(
-                  'ALLOW NOTIFICATIONS ABOUT BONUSES AND PROMOS',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _cream,
-                    fontFamily: 'Baloo2',
-                    fontSize: 23,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.3,
-                    height: 1.18,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight:
+                        constraints.maxHeight - (isLandscape ? 40 : 48),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Stay tuned for special offers and rewards',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _cream.withValues(alpha: 0.78),
-                    fontFamily: 'Poppins',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    height: 1.3,
+                  child: Center(
+                    child: isLandscape
+                        ? _LandscapeLayout(
+                            maxWidth: constraints.maxWidth,
+                            working: _working,
+                            onAccept: _accept,
+                            onSkip: _skip,
+                          )
+                        : _PortraitLayout(
+                            maxWidth: constraints.maxWidth,
+                            working: _working,
+                            onAccept: _accept,
+                            onSkip: _skip,
+                          ),
                   ),
                 ),
-                SizedBox(height: landscape ? 20 : 32),
-                _InviteButton(
-                  width: width,
-                  height: landscape ? 66 : 74,
-                  fontSize: landscape ? 22 : 25,
-                  label: 'Accept',
-                  emphasized: true,
-                  busy: _working,
-                  onTap: _accept,
-                ),
-                SizedBox(height: landscape ? 12 : 16),
-                _InviteButton(
-                  width: width * 0.9,
-                  height: landscape ? 58 : 64,
-                  fontSize: landscape ? 20 : 22,
-                  label: 'Skip',
-                  emphasized: false,
-                  busy: false,
-                  onTap: _skip,
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Portrait: single centered column (badge → copy → buttons). ──────────────
+
+class _PortraitLayout extends StatelessWidget {
+  const _PortraitLayout({
+    required this.maxWidth,
+    required this.working,
+    required this.onAccept,
+    required this.onSkip,
+  });
+
+  final double maxWidth;
+  final bool working;
+  final VoidCallback onAccept;
+  final VoidCallback onSkip;
+
+  @override
+  Widget build(BuildContext context) {
+    final buttonWidth = (maxWidth * 0.80).clamp(280.0, 440.0);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        const _BellBadge(size: 128),
+        const SizedBox(height: 26),
+        const _InviteTitle(),
+        const SizedBox(height: 10),
+        const _InviteSubtitle(),
+        const SizedBox(height: 32),
+        _InviteButton(
+          width: buttonWidth,
+          height: 74,
+          fontSize: 25,
+          label: 'Accept',
+          emphasized: true,
+          busy: working,
+          onTap: onAccept,
+        ),
+        const SizedBox(height: 16),
+        _InviteButton(
+          width: buttonWidth * 0.9,
+          height: 64,
+          fontSize: 22,
+          label: 'Skip',
+          emphasized: false,
+          busy: false,
+          onTap: onSkip,
+        ),
+      ],
+    );
+  }
+}
+
+// ── Landscape: two-column Row [copy] | [buttons]. ───────────────────────────
+// Uses the wide landscape canvas properly instead of stacking everything in a
+// tall column that gets squeezed vertically and grows the buttons much wider
+// than they need to be.
+
+class _LandscapeLayout extends StatelessWidget {
+  const _LandscapeLayout({
+    required this.maxWidth,
+    required this.working,
+    required this.onAccept,
+    required this.onSkip,
+  });
+
+  final double maxWidth;
+  final bool working;
+  final VoidCallback onAccept;
+  final VoidCallback onSkip;
+
+  @override
+  Widget build(BuildContext context) {
+    // Cap the overall content width so on wide iPads the invite doesn't
+    // sprawl edge-to-edge — the column pair reads best around 780 pt.
+    final contentWidth = maxWidth.clamp(0.0, 820.0);
+    final buttonWidth = (contentWidth * 0.42).clamp(220.0, 320.0);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: contentWidth),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          // Left column: bell + copy, left-aligned so the eye lands on the
+          // Accept button on the right of the reading flow.
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const <Widget>[
+                  _BellBadge(size: 76),
+                  SizedBox(height: 18),
+                  _InviteTitle(align: TextAlign.left, fontSize: 20),
+                  SizedBox(height: 8),
+                  _InviteSubtitle(align: TextAlign.left),
+                ],
+              ),
+            ),
+          ),
+          // Right column: buttons stacked vertically, aligned to the row's
+          // vertical center.
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              _InviteButton(
+                width: buttonWidth,
+                height: 60,
+                fontSize: 21,
+                label: 'Accept',
+                emphasized: true,
+                busy: working,
+                onTap: onAccept,
+              ),
+              const SizedBox(height: 12),
+              _InviteButton(
+                width: buttonWidth,
+                height: 54,
+                fontSize: 19,
+                label: 'Skip',
+                emphasized: false,
+                busy: false,
+                onTap: onSkip,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Reusable pieces (badge / title / subtitle / button) ─────────────────────
+
+class _BellBadge extends StatelessWidget {
+  const _BellBadge({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _PushInvitePageState._straw.withValues(alpha: 0.16),
+        border: Border.all(
+          color: _PushInvitePageState._straw.withValues(alpha: 0.55),
+          width: 3,
+        ),
+      ),
+      child: Icon(
+        Icons.notifications_active_rounded,
+        size: size * 0.5,
+        color: _PushInvitePageState._straw,
+      ),
+    );
+  }
+}
+
+class _InviteTitle extends StatelessWidget {
+  const _InviteTitle({this.align = TextAlign.center, this.fontSize = 23});
+
+  final TextAlign align;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'ALLOW NOTIFICATIONS ABOUT BONUSES AND PROMOS',
+      textAlign: align,
+      style: TextStyle(
+        color: _PushInvitePageState._cream,
+        fontFamily: 'Baloo2',
+        fontSize: fontSize,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.3,
+        height: 1.18,
+      ),
+    );
+  }
+}
+
+class _InviteSubtitle extends StatelessWidget {
+  const _InviteSubtitle({this.align = TextAlign.center});
+
+  final TextAlign align;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Stay tuned for special offers and rewards',
+      textAlign: align,
+      style: TextStyle(
+        color: _PushInvitePageState._cream.withValues(alpha: 0.78),
+        fontFamily: 'Poppins',
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        height: 1.3,
       ),
     );
   }
@@ -215,11 +384,17 @@ class _InviteButton extends StatelessWidget {
             end: Alignment.bottomCenter,
           ),
           border: Border.all(
-            color: emphasized ? const Color(0xFF7E2E22) : const Color(0xFF23263A),
+            color: emphasized
+                ? const Color(0xFF7E2E22)
+                : const Color(0xFF23263A),
             width: 3,
           ),
           boxShadow: const <BoxShadow>[
-            BoxShadow(color: Colors.black45, blurRadius: 12, offset: Offset(0, 5)),
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 12,
+              offset: Offset(0, 5),
+            ),
           ],
         ),
         child: Material(
@@ -239,14 +414,14 @@ class _InviteButton extends StatelessWidget {
                   : Text(
                       label,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFFF2EBD3),
+                      style: TextStyle(
+                        color: const Color(0xFFF2EBD3),
                         fontFamily: 'Baloo2',
-                        fontSize: 25,
+                        fontSize: fontSize,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.6,
                         height: 1.0,
-                      ).copyWith(fontSize: fontSize),
+                      ),
                     ),
             ),
           ),
