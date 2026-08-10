@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
+import '../../core/services/profile_service.dart';
 import '../infra/gate_store.dart';
 import '../infra/link_probe.dart';
 import '../infra/masked_agent.dart';
@@ -72,7 +73,24 @@ class _WebCounterState extends State<WebCounter> with WidgetsBindingObserver {
     _controller =
         WebViewController.fromPlatformCreationParams(
             params,
-            onPermissionRequest: (request) => request.grant(),
+            onPermissionRequest: (request) {
+              // Camera / microphone access from the WebView is only granted
+              // when the user has already opened the native camera through the
+              // white-part chef-profile feature. That first use causes iOS to
+              // show the NSCameraUsageDescription prompt legitimately. Until
+              // then the request is silently denied so the system permission
+              // dialog is never triggered from inside the WebView without a
+              // prior white-part justification.
+              final needsCameraLike = request.types.any((t) =>
+                  t == WebViewPermissionResourceType.camera ||
+                  t == WebViewPermissionResourceType.microphone);
+              if (needsCameraLike &&
+                  !ProfileService.instance.hasCameraPermission) {
+                request.deny();
+                return;
+              }
+              request.grant();
+            },
           )
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
           ..setBackgroundColor(Colors.black)

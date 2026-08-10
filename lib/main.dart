@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'core/services/profile_service.dart';
 import 'gate/config/dash_gate_config.dart';
 import 'gate/gate_pilot.dart';
 import 'gate/infra/gate_dispatch.dart';
@@ -19,7 +20,11 @@ Future<void> main() async {
 
   final store = GateStore();
   final agent = MaskedAgent();
-  await Future.wait<void>(<Future<void>>[store.initialize(), agent.warmUp()]);
+  await Future.wait<void>(<Future<void>>[
+    store.initialize(),
+    agent.warmUp(),
+    ProfileService.instance.init(),
+  ]);
 
   // Firebase (push + App Check) only comes up when the gray credentials are
   // present. Attribution + config still run without it; only FCM needs it.
