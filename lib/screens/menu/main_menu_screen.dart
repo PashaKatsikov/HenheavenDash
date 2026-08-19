@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/audio/audio_manager.dart';
 import '../../core/game_state.dart';
 import '../../core/game_state_scope.dart';
 import '../../theme/app_colors.dart';
@@ -23,6 +24,12 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   bool _offeredDailyReward = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AudioManager.instance.playBgm();
+  }
 
   void _push(BuildContext context, Widget screen) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));

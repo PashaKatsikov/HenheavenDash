@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'haptics.dart';
 import 'models/daily_reward.dart';
 import 'models/daily_task.dart';
 import 'models/recipe.dart';
@@ -36,6 +37,7 @@ class GameState extends ChangeNotifier {
     await _save.init();
     await _dailies.init();
     await _dailyReward.init();
+    Haptics.instance.init();
     for (final r in RecipeCatalog.all) {
       if (r.unlockLevel == 1) await _save.unlockRecipe(r.id);
     }
@@ -52,11 +54,14 @@ class GameState extends ChangeNotifier {
 
   int upgradeLevelFor(String id) => upgradeLevels[id] ?? 0;
 
+  int _walletFor(UpgradeCurrency currency) =>
+      currency == UpgradeCurrency.tips ? tips : coins;
+
   bool canAffordUpgrade(String id) {
     final def = UpgradeCatalog.byId(id);
     final lvl = upgradeLevelFor(id);
     if (lvl >= def.maxLevel) return false;
-    return coins >= def.costForLevel(lvl);
+    return _walletFor(def.currency) >= def.costForLevel(lvl);
   }
 
   Future<bool> purchaseUpgrade(String id) async {
@@ -64,12 +69,27 @@ class GameState extends ChangeNotifier {
     final lvl = upgradeLevelFor(id);
     if (lvl >= def.maxLevel) return false;
     final cost = def.costForLevel(lvl);
-    if (coins < cost) return false;
-    await _save.spendCoins(cost);
+    if (_walletFor(def.currency) < cost) return false;
+    if (def.currency == UpgradeCurrency.tips) {
+      await _save.spendTips(cost);
+    } else {
+      await _save.spendCoins(cost);
+    }
     await _save.setUpgradeLevel(id, lvl + 1);
     notifyListeners();
     return true;
   }
+
+  /// Share of a level's earnings actually paid out when replaying a level
+  /// that has already been cleared. Without it the shortest early level is a
+  /// risk-free coin faucet that can be farmed indefinitely, which flattens
+  /// the whole upgrade economy.
+  static const double replayPayoutRate = 0.3;
+
+  /// True once [level] has been beaten, i.e. finishing it again is a replay.
+  /// Clearing a level unlocks the next one, so anything below the highest
+  /// unlocked level has already been won at least once.
+  bool isReplay(int level) => level < highestLevelUnlocked;
 
   /// Called when a level finishes. Applies rewards, unlocks the next level
   /// and any recipes tied to it, updates stats & dailies, then notifies UI.
@@ -84,8 +104,12 @@ class GameState extends ChangeNotifier {
     required int stars,
     required bool noMistakes,
   }) async {
-    await _save.addCoins(coinsEarned);
-    await _save.addTips(tipsEarned);
+    final replay = isReplay(level);
+    final coinsAwarded = replay ? (coinsEarned * replayPayoutRate).round() : coinsEarned;
+    final tipsAwarded = replay ? (tipsEarned * replayPayoutRate).round() : tipsEarned;
+
+    await _save.addCoins(coinsAwarded);
+    await _save.addTips(tipsAwarded);
     await _save.addOrdersServed(ordersServedThisRun);
     await _save.addDishesCooked(dishesCookedThisRun);
     await _save.reportScore(score);
@@ -107,11 +131,16 @@ class GameState extends ChangeNotifier {
 
     await _dailies.reportProgress(DailyTaskMetric.ordersServed, ordersServedThisRun);
     await _dailies.reportProgress(DailyTaskMetric.dishesCooked, dishesCookedThisRun);
-    await _dailies.reportProgress(DailyTaskMetric.coinsEarned, coinsEarned + tipsEarned);
+    await _dailies.reportProgress(DailyTaskMetric.coinsEarned, coinsAwarded + tipsAwarded);
     if (won) await _dailies.reportLevelCleanFinish(noMistakes);
 
     notifyListeners();
-    return LevelResult(newlyUnlockedRecipes: newlyUnlocked);
+    return LevelResult(
+      newlyUnlockedRecipes: newlyUnlocked,
+      coinsAwarded: coinsAwarded,
+      tipsAwarded: tipsAwarded,
+      wasReplay: replay,
+    );
   }
 
   /// Called when an Endless run ends (3 mistakes made). There's no level to
@@ -155,8 +184,20 @@ class GameState extends ChangeNotifier {
 }
 
 class LevelResult {
-  LevelResult({required this.newlyUnlockedRecipes});
+  LevelResult({
+    required this.newlyUnlockedRecipes,
+    required this.coinsAwarded,
+    required this.tipsAwarded,
+    required this.wasReplay,
+  });
+
   final List<Recipe> newlyUnlockedRecipes;
+
+  /// What actually landed in the wallet - lower than the run's raw earnings
+  /// when the level was a replay.
+  final int coinsAwarded;
+  final int tipsAwarded;
+  final bool wasReplay;
 }
 
 class EndlessResult {

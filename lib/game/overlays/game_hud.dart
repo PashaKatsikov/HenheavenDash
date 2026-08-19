@@ -39,6 +39,28 @@ class GameHud extends StatelessWidget {
             borderColor: AppColors.accent,
             child: Text('🔥 x${session.combo}', style: AppTextStyles.hudNumber.copyWith(fontSize: 16)),
           ),
+        // Steady Hands charges left this level - without this the perk would
+        // silently save a combo with nothing on screen to explain why.
+        if (session.comboShieldsLeft > 0) ...[
+          const SizedBox(width: 6),
+          GlassPanel(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            borderRadius: 30,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset('assets/images/rewards/rw_medal_wreath.png', width: 18, height: 18),
+                if (session.comboShieldsLeft > 1) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    '${session.comboShieldsLeft}',
+                    style: AppTextStyles.hudNumber.copyWith(fontSize: 15),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
         const Spacer(),
         Expanded(
           flex: 3,

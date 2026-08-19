@@ -5,6 +5,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../core/audio/audio_manager.dart';
 import '../../core/game_state.dart';
 import '../../core/game_state_scope.dart';
+import '../../core/haptics.dart';
 import '../../core/models/level_config.dart';
 import '../../core/models/recipe.dart';
 import '../../game/henhaven_game.dart';
@@ -38,6 +39,7 @@ class _GameScreenState extends State<GameScreen> {
   late LevelSession _session;
   late HenhavenGame _flameGame;
   final AudioManager _audio = AudioManager.instance;
+  final Haptics _haptics = Haptics.instance;
 
   bool _paused = false;
   bool _showResult = false;
@@ -47,10 +49,16 @@ class _GameScreenState extends State<GameScreen> {
   LevelResult? _levelResult;
   EndlessResult? _endlessResult;
 
+  /// Captured when the run starts, because clearing the level moves the
+  /// progression forward and would make a first win look like a replay by the
+  /// time the result overlay is built.
+  bool _wasReplay = false;
+
   @override
   void initState() {
     super.initState();
     WakelockPlus.enable();
+    _audio.playBgm();
   }
 
   @override
@@ -65,6 +73,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void _buildSession() {
     final state = GameStateScope.of(context);
+    _wasReplay = !widget.endless && state.isReplay(widget.level);
     // Endless mode always runs on the hardest kitchen's difficulty (the last
     // level) since there's no single "level number" for it.
     final config = widget.endless ? LevelCatalog.getLevel(LevelCatalog.totalLevels) : LevelCatalog.getLevel(widget.level);
@@ -74,6 +83,10 @@ class _GameScreenState extends State<GameScreen> {
     final extraStationLvl = upgrades['extra_station'] ?? 0;
     final patienceLvl = upgrades['patience_boost'] ?? 0;
     final tipLvl = upgrades['tip_boost'] ?? 0;
+    // Tip-bought perks.
+    final hourglassLvl = upgrades['golden_hourglass'] ?? 0;
+    final pantryLvl = upgrades['tidy_pantry'] ?? 0;
+    final steadyLvl = upgrades['steady_hands'] ?? 0;
 
     // Recipes used in a level are exactly the ones already unlocked in save
     // state - the single source of truth also shown as "unlocked" in the
@@ -88,6 +101,9 @@ class _GameScreenState extends State<GameScreen> {
       patienceBonusSeconds: patienceLvl * 2.0,
       tipMultiplierUpgrade: 1 + tipLvl * 0.08,
       availableRecipes: availableRecipes,
+      bonusTimeSeconds: hourglassLvl * 6.0,
+      maxDecoys: (2 - pantryLvl).clamp(0, 2),
+      comboShields: steadyLvl,
       endless: widget.endless,
     );
     _flameGame = HenhavenGame(session: _session, backgroundAssetPath: config.kitchen.backgroundPath);
@@ -99,18 +115,22 @@ class _GameScreenState extends State<GameScreen> {
       switch (event.type) {
         case SessionEventType.ingredientCorrect:
           _audio.playDragItem();
+          _haptics.tick();
           break;
         case SessionEventType.ingredientWrong:
           _audio.playIncorrect();
+          _haptics.bump();
           break;
         case SessionEventType.cookingStarted:
           _audio.playCookingStart();
           break;
         case SessionEventType.cookingComplete:
           _audio.playCookingComplete();
+          _haptics.tick();
           break;
         case SessionEventType.served:
           _audio.playServeSuccess();
+          _haptics.success();
           if (event.tipsEarned > 0) _audio.playTipsReceived();
           _flameGame.burstCoinsAt(Vector2(_flameGame.size.x / 2, _flameGame.size.y - 210));
           _flameGame.floatText(
@@ -121,18 +141,22 @@ class _GameScreenState extends State<GameScreen> {
           break;
         case SessionEventType.comboMilestone:
           _audio.playHappyCustomer();
+          _haptics.bump();
           _flameGame.burstStarsAt(Vector2(_flameGame.size.x / 2, _flameGame.size.y - 260));
           break;
         case SessionEventType.customerLeftAngry:
           _audio.playWarning();
+          _haptics.thud();
           _flameGame.reactSad();
           break;
         case SessionEventType.levelWon:
           _audio.playWin();
+          _haptics.success();
           _flameGame.celebrate();
           break;
         case SessionEventType.levelLost:
           _audio.playLose();
+          _haptics.thud();
           break;
         case SessionEventType.customerSpawned:
           break;
@@ -257,6 +281,11 @@ class _GameScreenState extends State<GameScreen> {
     _session.dispose();
     super.dispose();
   }
+
+  /// Mirrors what [GameState.completeLevel] actually banks, so the result
+  /// overlay never flashes the full amount before the reduced replay payout
+  /// lands.
+  double get _payoutRate => _wasReplay ? GameState.replayPayoutRate : 1.0;
 
   void _togglePause() {
     setState(() => _paused = !_paused);
@@ -426,8 +455,9 @@ class _GameScreenState extends State<GameScreen> {
               LevelResultOverlay(
                 won: _session.won,
                 score: _session.score,
-                coinsEarned: _session.coinsEarned,
-                tipsEarned: _session.tipsEarned,
+                coinsEarned: (_session.coinsEarned * _payoutRate).round(),
+                tipsEarned: (_session.tipsEarned * _payoutRate).round(),
+                replayPayout: _wasReplay,
                 stars: widget.endless ? 0 : _session.starsEarned(),
                 newlyUnlockedRecipes: _levelResult?.newlyUnlockedRecipes ?? const [],
                 endless: widget.endless,

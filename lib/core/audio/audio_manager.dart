@@ -3,23 +3,29 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import '../persistence/save_service.dart';
 
-/// Central sound manager for every SFX event in the game, plus optional
-/// background music support.
+/// Central sound manager for every SFX event in the game, plus the looping
+/// background music.
 ///
-/// NOTE: the provided art/audio bundle only shipped short SFX clips (click,
-/// coins, cooking, serving, win/lose, etc) - there is no background music
-/// track. [playBgm] is fully wired up and ready to go the moment a
-/// `assets/sounds/bgm.mp3` (or similar) file is added and registered in
-/// pubspec.yaml; until then it silently no-ops so the Music toggle in
-/// Settings simply has nothing to play yet instead of crashing.
+/// Music and SFX are independent: each has its own persisted toggle in
+/// Settings, and turning music back on resumes the track the app last asked
+/// for rather than waiting for the next screen change.
 class AudioManager {
   AudioManager._();
   static final AudioManager instance = AudioManager._();
 
+  /// The single cozy loop that plays across the whole white part of the app.
+  static const String menuTheme = 'bgm_cozy_farm.m4a';
+
   bool _initialized = false;
   bool sfxEnabled = true;
   bool musicEnabled = true;
+
+  /// Track currently coming out of the speaker.
   String? _currentBgm;
+
+  /// Track the app *wants* playing, even while music is switched off - this
+  /// is what gets started again when the player flips the toggle back on.
+  String? _requestedBgm;
 
   // Looping "sizzle" that plays while any station is actively cooking. Kept as
   // a single shared player so multiple cooking stations don't stack the sound.
@@ -63,6 +69,13 @@ class AudioManager {
       await FlameAudio.audioCache.loadAll(_sfx.values.toList());
     } catch (e) {
       debugPrint('AudioManager: failed to preload SFX: $e');
+    }
+    try {
+      // Registers the lifecycle observer that pauses/resumes the music when
+      // the app leaves and returns to the foreground.
+      await FlameAudio.bgm.initialize();
+    } catch (e) {
+      debugPrint('AudioManager: failed to initialize BGM: $e');
     }
     _initialized = true;
   }
@@ -131,17 +144,23 @@ class AudioManager {
     } catch (_) {}
   }
 
-  /// Plays a looping background track if [assetFile] exists in the audio
-  /// cache. Safe to call even if no BGM asset has been added yet.
-  Future<void> playBgm(String assetFile) async {
+  /// Starts (or keeps) the looping background track. Calling it repeatedly
+  /// with the same file is a no-op, so screens can safely ask for music in
+  /// `initState` without restarting the loop on every navigation.
+  Future<void> playBgm([String assetFile = menuTheme]) async {
+    _requestedBgm = assetFile;
     if (!musicEnabled || _currentBgm == assetFile) return;
     try {
-      await FlameAudio.bgm.play(assetFile, volume: 0.45);
+      await FlameAudio.bgm.play(assetFile, volume: _bgmVolume);
       _currentBgm = assetFile;
     } catch (e) {
-      debugPrint('AudioManager: no BGM track available ($assetFile): $e');
+      debugPrint('AudioManager: could not play BGM ($assetFile): $e');
+      _currentBgm = null;
     }
   }
+
+  /// Sits well below the SFX so serving, coins and timers stay legible.
+  static const double _bgmVolume = 0.32;
 
   void stopBgm() {
     _currentBgm = null;
@@ -161,7 +180,9 @@ class AudioManager {
   void setMusicEnabled(bool value) {
     musicEnabled = value;
     SaveService.instance.setMusicEnabled(value);
-    if (!value) {
+    if (value) {
+      playBgm(_requestedBgm ?? menuTheme);
+    } else {
       stopBgm();
     }
   }

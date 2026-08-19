@@ -72,9 +72,13 @@ class LevelSession extends ChangeNotifier {
     required this.patienceBonusSeconds,
     required this.tipMultiplierUpgrade,
     required List<Recipe> availableRecipes,
+    this.bonusTimeSeconds = 0,
+    this.maxDecoys = 2,
+    this.comboShields = 0,
     this.endless = false,
   })  : availableRecipes = availableRecipes.isNotEmpty ? availableRecipes : [RecipeCatalog.all.first],
         stations = List.generate(stationCount, (i) => Station(id: i)),
+        comboShieldsLeft = comboShields,
         _rng = Random() {
     // The very first guest is already waiting the instant the level starts -
     // 0 means the first _updateSpawning tick spawns them immediately, so the
@@ -91,6 +95,17 @@ class LevelSession extends ChangeNotifier {
   final List<Recipe> availableRecipes;
   final List<Station> stations;
   final Random _rng;
+
+  /// Extra seconds granted by the Golden Hourglass perk.
+  final double bonusTimeSeconds;
+
+  /// How many look-alike decoy ingredients the prep shelf may hold. The Tidy
+  /// Pantry perk lowers this, making prep less of a spot-the-difference test.
+  final int maxDecoys;
+
+  /// Lost guests the combo can shrug off this level (Steady Hands perk).
+  final int comboShields;
+  int comboShieldsLeft;
 
   /// Endless mode: no time limit and no target order count - the run just
   /// keeps going (with the hardest level's difficulty) until [mistakes]
@@ -138,7 +153,7 @@ class LevelSession extends ChangeNotifier {
   /// Call once from the owning widget after construction, once the level
   /// timer should actually start counting down.
   void start() {
-    _timeRemaining = config.levelTimeSeconds;
+    _timeRemaining = config.levelTimeSeconds + bonusTimeSeconds;
   }
 
   List<SessionEvent> drainEvents() {
@@ -219,7 +234,13 @@ class LevelSession extends ChangeNotifier {
       station.cookProgress = 0;
     }
     missedCustomers++;
-    combo = 0;
+    // Steady Hands absorbs the combo reset (but never the miss itself, so
+    // the level's fail conditions stay exactly as strict as before).
+    if (comboShieldsLeft > 0 && combo > 0) {
+      comboShieldsLeft--;
+    } else {
+      combo = 0;
+    }
     if (endless) mistakes++;
     _emit(const SessionEvent(SessionEventType.customerLeftAngry));
   }
@@ -278,7 +299,8 @@ class LevelSession extends ChangeNotifier {
         .where((id) => !required.contains(id))
         .toList()
       ..shuffle(_rng);
-    final decoyCount = (_maxShelfSlots - required.length).clamp(0, min(2, decoyPool.length)).toInt();
+    final decoyCount =
+        (_maxShelfSlots - required.length).clamp(0, min(maxDecoys, decoyPool.length)).toInt();
     final shelf = [...required, ...decoyPool.take(decoyCount)];
     shelf.shuffle(_rng);
     return shelf;

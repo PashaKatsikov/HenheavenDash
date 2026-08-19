@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/audio/audio_manager.dart';
+import '../../core/haptics.dart';
 import '../../core/services/profile_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -19,6 +20,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _audio = AudioManager.instance;
+  final _haptics = Haptics.instance;
   final _profile = ProfileService.instance;
   bool _pickingPhoto = false;
 
@@ -129,6 +131,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 setState(() => _audio.setSfxEnabled(v)),
                           ),
                         ),
+                        const SizedBox(height: 12),
+
+                        GlassPanel(
+                          child: _ToggleRow(
+                            label: 'Music',
+                            icon: Icons.music_note_rounded,
+                            value: _audio.musicEnabled,
+                            onChanged: (v) =>
+                                setState(() => _audio.setMusicEnabled(v)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        GlassPanel(
+                          child: _ToggleRow(
+                            label: 'Vibration',
+                            icon: Icons.vibration_rounded,
+                            value: _haptics.enabled,
+                            onChanged: (v) =>
+                                setState(() => _haptics.setEnabled(v)),
+                          ),
+                        ),
                         const SizedBox(height: 16),
 
                         _LinkTile(
@@ -153,7 +177,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                         Center(
                           child: Text(
-                            'Henhaven Dash  ·  v1.0.0',
+                            'Henhaven Dash  ·  v1.0.2',
                             style: AppTextStyles.caption
                                 .copyWith(color: Colors.white54),
                           ),

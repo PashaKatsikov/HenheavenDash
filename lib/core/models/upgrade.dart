@@ -1,3 +1,8 @@
+/// Which wallet an upgrade is bought from. Coins come from every served
+/// order, tips only from *fast* serves - so tip-priced perks are the reward
+/// for playing well rather than for playing long.
+enum UpgradeCurrency { coins, tips }
+
 class UpgradeDef {
   const UpgradeDef({
     required this.id,
@@ -7,6 +12,7 @@ class UpgradeDef {
     required this.maxLevel,
     required this.baseCost,
     required this.costGrowth,
+    this.currency = UpgradeCurrency.coins,
   });
 
   final String id;
@@ -16,6 +22,7 @@ class UpgradeDef {
   final int maxLevel;
   final int baseCost;
   final double costGrowth;
+  final UpgradeCurrency currency;
 
   int costForLevel(int currentLevel) => (baseCost * (1 + currentLevel * costGrowth)).round();
 }
@@ -63,7 +70,42 @@ class UpgradeCatalog {
       baseCost: 90,
       costGrowth: 0.4,
     ),
+
+    // ── Chef's perks, bought with tips ──────────────────────────────────
+    UpgradeDef(
+      id: 'golden_hourglass',
+      name: 'Golden Hourglass',
+      description: 'Every level starts with 6 more seconds on the clock.',
+      iconPath: '${_kitchenBase}kit_timer_blue.png',
+      maxLevel: 5,
+      baseCost: 40,
+      costGrowth: 0.5,
+      currency: UpgradeCurrency.tips,
+    ),
+    UpgradeDef(
+      id: 'tidy_pantry',
+      name: 'Tidy Pantry',
+      description: 'One less look-alike ingredient clutters the prep shelf.',
+      iconPath: '${_kitchenBase}kit_shelf_spices_wood.png',
+      maxLevel: 2,
+      baseCost: 60,
+      costGrowth: 0.8,
+      currency: UpgradeCurrency.tips,
+    ),
+    UpgradeDef(
+      id: 'steady_hands',
+      name: 'Steady Hands',
+      description: 'Your combo survives one lost guest per level.',
+      iconPath: '${_rewardBase}rw_medal_wreath.png',
+      maxLevel: 2,
+      baseCost: 75,
+      costGrowth: 0.9,
+      currency: UpgradeCurrency.tips,
+    ),
   ];
 
   static UpgradeDef byId(String id) => all.firstWhere((e) => e.id == id);
+
+  static List<UpgradeDef> byCurrency(UpgradeCurrency currency) =>
+      all.where((e) => e.currency == currency).toList();
 }

@@ -29,6 +29,7 @@ class SaveService {
   static const _kUpgradeLevels = 'upgrade_levels';
   static const _kSfxEnabled = 'sfx_enabled';
   static const _kMusicEnabled = 'music_enabled';
+  static const _kHapticsEnabled = 'haptics_enabled';
   static const _kDailyTasksState = 'daily_tasks_state';
   static const _kDailyTasksDate = 'daily_tasks_date';
   static const _kStarsPerLevel = 'stars_per_level';
@@ -43,6 +44,7 @@ class SaveService {
   Future<void> addCoins(int amount) async => _prefs.setInt(_kCoins, coins + amount);
   Future<void> spendCoins(int amount) async => _prefs.setInt(_kCoins, (coins - amount).clamp(0, 1 << 31));
   Future<void> addTips(int amount) async => _prefs.setInt(_kTips, tips + amount);
+  Future<void> spendTips(int amount) async => _prefs.setInt(_kTips, (tips - amount).clamp(0, 1 << 31));
 
   // ---- Stats -------------------------------------------------------------
   int get bestScore => _prefs.getInt(_kBestScore) ?? 0;
@@ -107,6 +109,9 @@ class SaveService {
 
   bool get musicEnabled => _prefs.getBool(_kMusicEnabled) ?? true;
   Future<void> setMusicEnabled(bool value) async => _prefs.setBool(_kMusicEnabled, value);
+
+  bool get hapticsEnabled => _prefs.getBool(_kHapticsEnabled) ?? true;
+  Future<void> setHapticsEnabled(bool value) async => _prefs.setBool(_kHapticsEnabled, value);
 
   // ---- Daily tasks ---------------------------------------------------------
   String? get dailyTasksDate => _prefs.getString(_kDailyTasksDate);
